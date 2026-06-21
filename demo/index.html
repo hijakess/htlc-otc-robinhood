@@ -205,12 +205,8 @@ a{color:var(--acc)}
       </select>
     </div>
     <div class="field">
-      <label>Jumlah yang saya minta</label>
+      <label>Jumlah ETH (minta = bayar, 1:1)</label>
       <input id="cAmtWant" type="number" value="1.0" step="0.01" min="0.01">
-    </div>
-    <div class="field">
-      <label>Jumlah yang saya tawarkan (bayar)</label>
-      <input id="cAmtGive" type="number" value="1.0" step="0.01" min="0.01">
     </div>
     <div class="note" id="cPreview"></div>
     <div class="mfoot">
@@ -273,11 +269,11 @@ function other(c){return c==='rh'?'l1':'rh';}
 
 function seed(){
   orders=[];oid=1;
-  addOrder('rh',1.0,1.02,'0x7a3f…2b1c');
-  addOrder('rh',0.5,0.51,'0x9c12…8de4');
-  addOrder('rh',2.0,2.05,'0x04FA…B2f3');
-  addOrder('l1',1.0,0.99,'0xdead…beef');
-  addOrder('l1',0.25,0.247,'0x1f7d…2efa');
+  addOrder('rh',1.0,1.0,'0x7a3f…2b1c');
+  addOrder('rh',0.5,0.5,'0x9c12…8de4');
+  addOrder('rh',2.0,2.0,'0x04FA…B2f3');
+  addOrder('l1',1.0,1.0,'0xdead…beef');
+  addOrder('l1',0.25,0.25,'0x1f7d…2efa');
   render();
 }
 function addOrder(want,amtWant,amtGive,maker){
@@ -442,24 +438,21 @@ document.addEventListener('change',e=>{if(e.target.closest('#createModal'))updat
 function updatePreview(){
   const want=document.getElementById('cWant').value;
   const aw=parseFloat(document.getElementById('cAmtWant').value||'0');
-  const ag=parseFloat(document.getElementById('cAmtGive').value||'0');
   document.getElementById('cPreview').innerHTML=
-    `Kamu (maker) <b>butuh ${aw.toFixed(3)} ${ASSET[want]}</b>, bayar <b>${ag.toFixed(3)} ${ASSET[other(want)]}</b>.
-     Taker yang ambil akan kasih ${ASSET[want]} & terima ${ASSET[other(want)]}.`;
+    `Kamu (maker) <b>butuh ${aw.toFixed(3)} ${ASSET[want]}</b>, bayar <b>${aw.toFixed(3)} ${ASSET[other(want)]}</b> (1:1).
+     Taker yang ambil kasih ${aw.toFixed(3)} ${ASSET[want]} & terima ${netAfterFee(aw).toFixed(3)} ${ASSET[other(want)]} (setelah fee 3%).`;
 }
 function createOrder(){
   const want=document.getElementById('cWant').value;
   const aw=parseFloat(document.getElementById('cAmtWant').value||'0');
-  const ag=parseFloat(document.getElementById('cAmtGive').value||'0');
-  if(aw<=0||ag<=0){alert('Jumlah harus > 0');return;}
-  addOrder(want,aw,ag,'0x04FA…B2f3'); // user = main wallet
+  if(aw<=0){alert('Jumlah harus > 0');return;}
+  addOrder(want,aw,aw,'0x04FA…B2f3'); // user = main wallet, bruto = input (1:1)
   activeTab=want; setTab(want); closeCreate();
 }
 function seedMore(){
   const want=Math.random()<0.5?'rh':'l1';
   const aw=+(0.1+Math.random()*2).toFixed(2);
-  const spread=want==='rh'?(1+Math.random()*0.05):(1-Math.random()*0.03);
-  addOrder(want,aw,+(aw*spread).toFixed(3));
+  addOrder(want,aw,aw); // bruto = input (1:1)
   setTab(want);
 }
 
