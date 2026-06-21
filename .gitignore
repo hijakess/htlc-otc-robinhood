@@ -1,0 +1,14 @@
+# Foundry
+out/
+cache/
+broadcast/
+
+# deps (vendored forge-std is large; keep repo lean)
+lib/
+
+# secrets / local
+*.txt
+.env
+deploy_demo.py
+fix_protection.py
+__pycache__/

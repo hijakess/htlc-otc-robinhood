@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTLC Atomic Swap — Robinhood ⇄ Ethereum L1 (Demo)</title>
+<style>
+:root{
+  --bg:#0a0e14; --panel:#121823; --panel2:#0f141d; --line:#1e2632;
+  --ink:#e6edf3; --mut:#8b98a9; --acc:#5b9dff; --rh:#9d7bff; --l1:#4dd4ac;
+  --ok:#3fb950; --warn:#d29922; --err:#f85149; --lock:#388bfd;
+}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#0e1622,#0a0e14);
+  color:var(--ink);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 16px 70px}
+h1{font-size:20px;margin:0 0 4px;letter-spacing:-.3px}
+.sub{color:var(--mut);font-size:13px;margin-bottom:18px}
+.sub b{color:var(--acc)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.chain{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+  border-radius:14px;padding:16px;position:relative;overflow:hidden}
+.chain.rh{box-shadow:inset 0 0 0 1px #2a2140}
+.chain.l1{box-shadow:inset 0 0 0 1px #16332b}
+.chead{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.dot{width:10px;height:10px;border-radius:50%}
+.rh .dot{background:var(--rh);box-shadow:0 0 10px var(--rh)}
+.l1 .dot{background:var(--l1);box-shadow:0 0 10px var(--l1)}
+.cname{font-weight:700;font-size:15px}
+.cmeta{color:var(--mut);font-size:11px;margin-left:auto;text-align:right}
+.rpc{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:2px 8px;border-radius:20px;
+  border:1px solid var(--line);cursor:pointer;user-select:none;transition:.15s}
+.rpc.up{color:var(--ok);border-color:#173a23}
+.rpc.down{color:var(--err);border-color:#3a1718;background:#1a0f10}
+.box{background:#0b1018;border:1px solid var(--line);border-radius:10px;padding:12px;margin-top:10px}
+.row{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:12.5px}
+.row .k{color:var(--mut)} .row .v{font-variant-numeric:tabular-nums;text-align:right;word-break:break-all}
+.state{display:inline-block;padding:3px 10px;border-radius:7px;font-size:11px;font-weight:700;letter-spacing:.4px}
+.s-IDLE{background:#1b2330;color:var(--mut)}
+.s-LOCKED{background:#0d2847;color:#79c0ff}
+.s-CLAIMABLE{background:#1c2a12;color:#a5d66a}
+.s-CLAIMED{background:#102a18;color:var(--ok)}
+.s-REFUNDING{background:#2a2410;color:var(--warn)}
+.s-REFUNDED{background:#2a1410;color:#ff9b72}
+.s-RETRY{background:#2a1410;color:var(--err)}
+.timer{font-variant-numeric:tabular-nums;font-weight:700}
+.bar{height:6px;background:#0b1018;border-radius:6px;overflow:hidden;margin-top:6px;border:1px solid var(--line)}
+.bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),var(--warn),var(--err));transition:width .3s linear}
+.controls{margin-top:16px;background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--line);border-radius:14px;padding:16px}
+.flowbtns{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--line);
+  background:#18202c;color:var(--ink);padding:9px 14px;transition:.15s}
+button:hover:not(:disabled){border-color:var(--acc);background:#1d2735}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.primary{background:linear-gradient(180deg,#1f6feb,#1456c4);border-color:#2d72e0}
+button.primary:hover:not(:disabled){background:linear-gradient(180deg,#2880ff,#1860d0)}
+button.danger{background:#2a1416;border-color:#5a2226;color:#ff9b8a}
+button.ghost{background:transparent}
+.log{margin-top:14px;background:#070a0f;border:1px solid var(--line);border-radius:10px;
+  padding:10px 12px;height:190px;overflow:auto;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}
+.log div{padding:1px 0;white-space:pre-wrap}
+.log .t{color:#566} .log .ok{color:var(--ok)} .log .warn{color:var(--warn)}
+.log .err{color:var(--err)} .log .info{color:var(--acc)} .log .sec{color:var(--rh)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:8px 0 0;color:var(--mut);font-size:11.5px}
+.party{display:inline-flex;align-items:center;gap:6px}
+.chip{padding:1px 7px;border-radius:5px;font-size:10.5px;font-weight:700}
+.chip.maker{background:#1a2540;color:#79c0ff}.chip.taker{background:#2a1f3f;color:#c4a5ff}
+.note{font-size:11.5px;color:var(--mut);margin-top:10px;line-height:1.5}
+.kbd{font:11px ui-monospace,monospace;background:#0b1018;border:1px solid var(--line);
+  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:#cdd6e0}
+.flash{animation:fl .6s ease}@keyframes fl{0%{background:#1d3a5f}100%{}}
+.head-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px}
+.badge{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid #173a23;color:var(--ok)}
+a{color:var(--acc)}
+.foot{margin-top:22px;color:var(--mut);font-size:11.5px;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head-row">
+    <h1>HTLC Atomic Swap — Robinhood Chain ⇄ Ethereum L1</h1>
+    <span class="badge">● simulasi client-side · 0 backend · trustless</span>
+  </div>
+  <div class="sub">
+    Demo OTC <b>trustless</b>: taker tukar <b>ETH (Robinhood)</b> dengan bayar <b>ETH (L1)</b>, tanpa bridge / kustodian.
+    Pengaman: <b>hashlock + timelock asimetris</b>. Worst case = <b>refund</b>, bukan kehilangan dana.
+    Coba klik <span class="kbd">Matikan RPC</span> di tengah swap untuk lihat proteksinya.
+  </div>
+
+  <div class="legend">
+    <span class="party"><span class="chip maker">MAKER</span> Solver / OTC desk (punya ETH di dua chain)</span>
+    <span class="party"><span class="chip taker">TAKER</span> User (mau ETH Robinhood, bayar ETH L1)</span>
+    <span class="party">🔑 secret &nbsp; # hashlock = keccak256(secret)</span>
+  </div>
+
+  <div class="grid" style="margin-top:12px">
+    <!-- ROBINHOOD CHAIN -->
+    <div class="chain rh" id="card-rh">
+      <div class="chead">
+        <span class="dot"></span><span class="cname">Robinhood Chain</span>
+        <span class="cmeta">chainId 4663 · gas murah<br>
+          <span class="rpc up" id="rpc-rh" onclick="toggleRpc('rh')">● RPC up</span></span>
+      </div>
+      <div class="box">
+        <div class="row"><span class="k">Leg</span><span class="v">MAKER 🔒 → TAKER</span></div>
+        <div class="row"><span class="k">Jumlah terkunci</span><span class="v" id="amt-rh">— ETH</span></div>
+        <div class="row"><span class="k">Timelock (refund)</span><span class="v timer" id="tl-rh">—</span></div>
+        <div class="row"><span class="k">Status</span><span class="v"><span class="state s-IDLE" id="st-rh">IDLE</span></span></div>
+        <div class="bar"><i id="bar-rh" style="width:100%"></i></div>
+      </div>
+      <div class="note">Sisi <b>LONGER</b> timelock (12 jam). Taker klaim di sini paling akhir — selalu ada jendela aman.</div>
+    </div>
+
+    <!-- ETHEREUM L1 -->
+    <div class="chain l1" id="card-l1">
+      <div class="chead">
+        <span class="dot"></span><span class="cname">Ethereum L1</span>
+        <span class="cmeta">chainId 1 · gas mahal<br>
+          <span class="rpc up" id="rpc-l1" onclick="toggleRpc('l1')">● RPC up</span></span>
+      </div>
+      <div class="box">
+        <div class="row"><span class="k">Leg</span><span class="v">TAKER 🔒 → MAKER</span></div>
+        <div class="row"><span class="k">Jumlah terkunci</span><span class="v" id="amt-l1">— ETH</span></div>
+        <div class="row"><span class="k">Timelock (refund)</span><span class="v timer" id="tl-l1">—</span></div>
+        <div class="row"><span class="k">Status</span><span class="v"><span class="state s-IDLE" id="st-l1">IDLE</span></span></div>
+        <div class="bar"><i id="bar-l1" style="width:100%"></i></div>
+      </div>
+      <div class="note">Sisi <b>SHORTER</b> timelock (6 jam). Maker reveal secret di sini dulu → secret terbuka on-chain.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="head-row" style="margin-bottom:10px">
+      <strong>Alur swap</strong>
+      <span class="cmeta" style="margin-left:auto">Waktu simulasi: <span class="timer" id="clock">T+00:00:00</span> &nbsp;·&nbsp; 1 dtk = 1 jam chain</span>
+    </div>
+    <div class="flowbtns">
+      <button class="primary" id="b1" onclick="step1()">1 · MAKER lock di Robinhood</button>
+      <button id="b2" onclick="step2()" disabled>2 · TAKER lock di L1</button>
+      <button id="b3" onclick="step3()" disabled>3 · MAKER reveal secret → claim L1</button>
+      <button id="b4" onclick="step4()" disabled>4 · TAKER claim Robinhood (auto)</button>
+      <button class="ghost" onclick="reset()">↻ Reset</button>
+    </div>
+    <div class="flowbtns" style="margin-top:10px">
+      <button class="danger" id="brpc-rh" onclick="toggleRpc('rh')">⚡ Matikan RPC Robinhood</button>
+      <button class="danger" id="brpc-l1" onclick="toggleRpc('l1')">⚡ Matikan RPC L1</button>
+      <button class="ghost" onclick="speedToggle()" id="bspeed">⏩ Kecepatan: 1×</button>
+      <button class="ghost" onclick="scenarioGrief()">😈 Skenario: counterparty stall → refund</button>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <div class="note">
+      <b>Proteksi RPC down:</b> dana tetap terkunci di kontrak — RPC down cuma <b>menunda</b> tx, bukan menghilangkan dana.
+      Watcher solver retry + multi-RPC fallback. Kalau timelock telanjur lewat (RPC mati total), kedua pihak tinggal
+      <span class="kbd">refund()</span> dan dana balik utuh. Guard: <b>jangan reveal kalau sisa waktu &lt; ambang aman</b>.
+    </div>
+  </div>
+
+  <div class="foot">
+    Mekanik di balik demo ini diuji on-chain di Foundry — <b>10/10 test PASS</b> (happy-path atomic, timeout-refund,
+    permissionless claim, anti double-claim, fuzz 256×). Kontrak <span class="kbd">HTLC.sol</span> + test ada di repo.
+    <br>Ini simulasi edukatif memakai keccak256 asli (secret → hashlock); belum tersambung wallet/chain nyata.
+  </div>
+</div>
+
+<script>
+/* ───────────── keccak256 (compact, untuk secret→hashlock asli) ───────────── */
+const keccak256=(function(){
+const RC=[0x1n,0x8082n,0x800000000000808an,0x8000000080008000n,0x808bn,0x80000001n,
+0x8000000080008081n,0x8000000000008009n,0x8an,0x88n,0x80008009n,0x8000000an,
+0x8000808bn,0x800000000000008bn,0x8000000000008089n,0x8000000000008003n,
+0x8000000000008002n,0x8000000000000080n,0x800an,0x800000008000000an,
+0x8000000080008081n,0x8000000000008080n,0x80000001n,0x8000000080008008n];
+const R=[0,1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14];
+const M=(1n<<64n)-1n;
+function rotl(x,n){n=BigInt(n);return ((x<<n)|(x>>(64n-n)))&M;}
+function keccakF(s){
+ for(let r=0;r<24;r++){
+  let C=[],D=[];
+  for(let x=0;x<5;x++)C[x]=s[x]^s[x+5]^s[x+10]^s[x+15]^s[x+20];
+  for(let x=0;x<5;x++)D[x]=C[(x+4)%5]^rotl(C[(x+1)%5],1);
+  for(let x=0;x<5;x++)for(let y=0;y<5;y++)s[x+5*y]^=D[x];
+  let B=new Array(25).fill(0n);
+  for(let x=0;x<5;x++)for(let y=0;y<5;y++)B[y+5*((2*x+3*y)%5)]=rotl(s[x+5*y],R[x+5*y]);
+  for(let x=0;x<5;x++)for(let y=0;y<5;y++)s[x+5*y]=B[x+5*y]^((~B[(x+1)%5+5*y])&B[(x+2)%5+5*y]);
+  s[0]^=RC[r];
+ }
+ return s;
+}
+return function(bytes){
+ const rate=136; let s=new Array(25).fill(0n);
+ let pad=new Uint8Array((Math.floor(bytes.length/rate)+1)*rate);
+ pad.set(bytes); pad[bytes.length]^=0x01; pad[pad.length-1]^=0x80;
+ for(let off=0;off<pad.length;off+=rate){
+  for(let i=0;i<rate/8;i++){
+   let v=0n; for(let j=7;j>=0;j--) v=(v<<8n)|BigInt(pad[off+i*8+j]);
+   s[i]^=v;
+  }
+  keccakF(s);
+ }
+ let out=new Uint8Array(32);
+ for(let i=0;i<4;i++){let v=s[i];for(let j=0;j<8;j++){out[i*8+j]=Number(v&0xffn);v>>=8n;}}
+ return '0x'+[...out].map(b=>b.toString(16).padStart(2,'0')).join('');
+};
+})();
+function strBytes(str){return new TextEncoder().encode(str);}
+
+/* ───────────── state ───────────── */
+const SHORT=6*3600, LONG=12*3600;        // detik chain (6h / 12h)
+const SAFE_MARGIN=2*3600;                // ambang aman 2 jam
+let secret, hashlock;
+let rpc={rh:true,l1:true};
+let leg={rh:{state:'IDLE',amt:0,abs:0},l1:{state:'IDLE',amt:0,abs:0}};
+let simSec=0, speed=1, running=false, timer=null;
+let revealed=false, autoClaimPending=false;
+
+function genSecret(){
+  const r=crypto.getRandomValues(new Uint8Array(16));
+  secret='secret-'+[...r].map(b=>b.toString(16).padStart(2,'0')).join('');
+  hashlock=keccak256(strBytes(secret));
+}
+genSecret();
+
+/* ───────────── log ───────────── */
+function log(msg,cls){
+  const el=document.getElementById('log');
+  const ts=fmt(simSec).replace('T+','');
+  const d=document.createElement('div');
+  d.innerHTML=`<span class="t">[${ts}]</span> <span class="${cls||''}">${msg}</span>`;
+  el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+function fmt(s){s=Math.max(0,Math.floor(s));const h=String(Math.floor(s/3600)).padStart(2,'0');
+  const m=String(Math.floor(s%3600/60)).padStart(2,'0');const x=String(s%60).padStart(2,'0');
+  return `T+${h}:${m}:${x}`;}
+function fmtRemain(s){if(s<=0)return'EXPIRED';s=Math.floor(s);const h=Math.floor(s/3600);
+  const m=Math.floor(s%3600/60);return `${h}j ${String(m).padStart(2,'0')}m tersisa`;}
+
+/* ───────────── render ───────────── */
+function setState(c,st){
+  leg[c].state=st;
+  const el=document.getElementById('st-'+c);
+  el.textContent=st; el.className='state s-'+st;
+  document.getElementById('card-'+c).classList.remove('flash');
+  void document.getElementById('card-'+c).offsetWidth;
+  document.getElementById('card-'+c).classList.add('flash');
+}
+function render(){
+  document.getElementById('clock').textContent=fmt(simSec);
+  for(const c of ['rh','l1']){
+    document.getElementById('amt-'+c).textContent=leg[c].amt?leg[c].amt.toFixed(3)+' ETH':'— ETH';
+    const tlel=document.getElementById('tl-'+c), barel=document.getElementById('bar-'+c);
+    if(leg[c].abs>0 && (leg[c].state==='LOCKED'||leg[c].state==='CLAIMABLE'||leg[c].state==='RETRY'||leg[c].state==='REFUNDING')){
+      const rem=leg[c].abs-simSec;
+      const total=(c==='rh')?LONG:SHORT;
+      tlel.textContent=fmtRemain(rem);
+      const pct=Math.max(0,Math.min(100,rem/total*100));
+      barel.style.width=pct+'%';
+      tlel.style.color = rem<SAFE_MARGIN ? 'var(--err)' : rem<total*0.34 ? 'var(--warn)' : 'var(--ink)';
+    } else if(leg[c].state==='CLAIMED'){ tlel.textContent='✓ claimed'; tlel.style.color='var(--ok)'; barel.style.width='0%';}
+    else if(leg[c].state==='REFUNDED'){ tlel.textContent='↩ refunded'; tlel.style.color='#ff9b72'; barel.style.width='0%';}
+    else { tlel.textContent='—'; tlel.style.color='var(--ink)'; barel.style.width='100%';}
+    const rel=document.getElementById('rpc-'+c);
+    rel.className='rpc '+(rpc[c]?'up':'down'); rel.textContent=rpc[c]?'● RPC up':'● RPC DOWN';
+    document.getElementById('brpc-'+c).textContent=(rpc[c]?'⚡ Matikan':'✔ Nyalakan')+' RPC '+(c==='rh'?'Robinhood':'L1');
+  }
+}
+
+/* ───────────── clock loop ───────────── */
+function tick(){
+  simSec+=1;
+  // expiry checks
+  for(const c of ['rh','l1']){
+    if((leg[c].state==='LOCKED'||leg[c].state==='RETRY'||leg[c].state==='CLAIMABLE') && simSec>=leg[c].abs){
+      setState(c,'REFUNDING');
+      log(`⏰ Timelock ${c.toUpperCase()} EXPIRED → tersedia refund(). Dana balik ke pemilik, no loss.`,'warn');
+    }
+  }
+  // retry pending auto-claim ketika RPC pulih
+  if(autoClaimPending && rpc.rh && leg.rh.state!=='REFUNDING' && leg.rh.state!=='REFUNDED'){
+    doTakerClaim();
+  }
+  render();
+}
+function ensureRunning(){ if(!running){running=true; timer=setInterval(tick,1000/speed);} }
+
+/* ───────────── steps ───────────── */
+function step1(){
+  ensureRunning();
+  leg.rh={state:'LOCKED',amt:1.0,abs:simSec+LONG};
+  setState('rh','LOCKED');
+  log(`① MAKER lock <b>1.000 ETH</b> di Robinhood → recipient TAKER. hashlock=<span class="sec">${hashlock.slice(0,18)}…</span>, timelock <b>12j</b> (LONGER).`,'info');
+  log(`   🔑 secret dirahasiakan MAKER: <span class="sec">${secret.slice(0,22)}…</span>`,'sec');
+  document.getElementById('b1').disabled=true;
+  document.getElementById('b2').disabled=false;
+  render();
+}
+function step2(){
+  leg.l1={state:'LOCKED',amt:1.0,abs:simSec+SHORT};
+  setState('l1','LOCKED');
+  log(`② TAKER lock <b>1.000 ETH</b> di L1 → recipient MAKER. hashlock sama, timelock <b>6j</b> (SHORTER). Asimetri aktif ✓`,'info');
+  document.getElementById('b2').disabled=true;
+  document.getElementById('b3').disabled=false;
+  render();
+}
+function step3(){
+  if(!rpc.l1){ log(`✋ Tidak bisa broadcast claim L1: <b>RPC L1 DOWN</b>. Tx tertunda — dana TETAP aman terkunci. Nyalakan RPC untuk lanjut.`,'err'); return; }
+  if(leg.l1.state!=='LOCKED'){ log('L1 leg tidak dalam status LOCKED.','err'); return; }
+  const rem=leg.l1.abs-simSec;
+  if(rem<SAFE_MARGIN){ log(`🛑 GUARD: sisa waktu L1 ${fmtRemain(rem)} &lt; ambang aman 2j. MAKER menolak reveal — biarkan refund. (reveal mepet = bahaya).`,'err'); return; }
+  revealed=true;
+  setState('l1','CLAIMED'); leg.l1.state='CLAIMED';
+  log(`③ MAKER reveal secret & claim L1 → terima <b>1.000 ETH L1</b>. ✔ secret kini <b>terbuka on-chain</b>: <span class="sec">${secret.slice(0,22)}…</span>`,'ok');
+  log(`   Verifikasi: keccak256(secret) == hashlock → <b>${keccak256(strBytes(secret))===hashlock?'TRUE':'FALSE'}</b>`,'ok');
+  document.getElementById('b3').disabled=true;
+  document.getElementById('b4').disabled=false;
+  // begitu secret terbuka, TAKER (solver) bisa auto-claim
+  setState('rh','CLAIMABLE');
+  log(`   → Sisi Robinhood kini <b>CLAIMABLE</b>. Watcher TAKER/solver akan push claim otomatis…`,'info');
+  render();
+}
+function step4(){ doTakerClaim(); }
+
+function doTakerClaim(){
+  if(leg.rh.state==='CLAIMED') return;
+  if(!revealed){ log('Secret belum terbuka — selesaikan langkah 3 dulu.','err'); return; }
+  if(leg.rh.state==='REFUNDING'||leg.rh.state==='REFUNDED'){ log('Robinhood leg sudah lewat timelock — jalur refund.','warn'); return; }
+  if(!rpc.rh){
+    autoClaimPending=true;
+    setState('rh','RETRY');
+    log(`④ Watcher coba push claim Robinhood tapi <b>RPC Robinhood DOWN</b> → status RETRY. Dana aman; auto-retry saat RPC pulih. (margin 12j masih lega)`,'err');
+    render(); return;
+  }
+  const rem=leg.rh.abs-simSec;
+  if(rem<=0){ log('Telat — timelock Robinhood lewat. Pakai refund.','warn'); return; }
+  autoClaimPending=false;
+  setState('rh','CLAIMED'); leg.rh.state='CLAIMED';
+  log(`④ TAKER claim Robinhood pakai secret yang terbuka → terima <b>1.000 ETH Robinhood</b>. ✅ <b>SWAP ATOMIK SELESAI</b>.`,'ok');
+  log(`   Hasil: TAKER bayar ETH L1, dapat ETH Robinhood. MAKER sebaliknya. Tidak ada pihak yang bisa menipu.`,'ok');
+  document.getElementById('b4').disabled=true;
+  render();
+}
+
+/* ───────────── RPC toggle ───────────── */
+function toggleRpc(c){
+  rpc[c]=!rpc[c];
+  log(rpc[c]?`🔌 RPC ${c.toUpperCase()} dinyalakan — watcher lanjut.`:`⚡ RPC ${c.toUpperCase()} DIMATIKAN — tx ke chain ini tertunda. Dana tetap aman terkunci.`, rpc[c]?'ok':'err');
+  if(rpc[c]&&autoClaimPending&&c==='rh'){ log('   → RPC Robinhood pulih, auto-retry claim…','info'); doTakerClaim(); }
+  render();
+}
+
+/* ───────────── speed ───────────── */
+function speedToggle(){
+  const opt=[1,4,12]; speed=opt[(opt.indexOf(speed)+1)%opt.length];
+  document.getElementById('bspeed').textContent='⏩ Kecepatan: '+speed+'×';
+  if(running){clearInterval(timer);timer=setInterval(tick,1000/speed);}
+}
+
+/* ───────────── skenario grief ───────────── */
+function scenarioGrief(){
+  reset(); ensureRunning(); speed=12; document.getElementById('bspeed').textContent='⏩ Kecepatan: 12×';
+  clearInterval(timer);timer=setInterval(tick,1000/speed);
+  log('😈 SKENARIO: kedua pihak lock, lalu counterparty diam (tidak pernah reveal). Tunggu timelock lewat → refund.','warn');
+  step1(); setTimeout(()=>step2(),400);
+  // tidak ada reveal → biarkan expired → tunjukkan refund
+}
+
+/* ───────────── reset ───────────── */
+function reset(){
+  if(timer)clearInterval(timer); running=false; timer=null;
+  simSec=0; speed=1; revealed=false; autoClaimPending=false;
+  rpc={rh:true,l1:true};
+  leg={rh:{state:'IDLE',amt:0,abs:0},l1:{state:'IDLE',amt:0,abs:0}};
+  genSecret();
+  setState('rh','IDLE'); setState('l1','IDLE');
+  leg.rh.state='IDLE'; leg.l1.state='IDLE';
+  document.getElementById('log').innerHTML='';
+  document.getElementById('bspeed').textContent='⏩ Kecepatan: 1×';
+  document.getElementById('b1').disabled=false;
+  document.getElementById('b2').disabled=true;
+  document.getElementById('b3').disabled=true;
+  document.getElementById('b4').disabled=true;
+  log('Siap. Klik ① untuk mulai. hashlock = keccak256(secret) dihitung ASLI di browser.','info');
+  log(`Test on-chain (Foundry): 10/10 PASS — happy-path, refund, permissionless claim, fuzz.`,'ok');
+  render();
+}
+reset();
+</script>
+</body>
+</html>
