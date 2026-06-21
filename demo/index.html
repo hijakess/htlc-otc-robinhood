@@ -3,128 +3,167 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>OTC Grid — Robinhood ⇄ Ethereum L1 (HTLC)</title>
+<title>RoboBridge OTC — Robinhood ⇄ Ethereum L1 (HTLC)</title>
 <style>
 :root{
-  --bg:#0a0e14; --panel:#121823; --panel2:#0f141d; --line:#1e2632;
-  --ink:#e6edf3; --mut:#8b98a9; --acc:#5b9dff; --rh:#9d7bff; --l1:#4dd4ac;
-  --ok:#3fb950; --warn:#d29922; --err:#f85149;
+  --bg:#0b0e14; --bg2:#070a0f; --card:#10151e; --inset:#0c1119; --line:rgba(255,255,255,.06);
+  --ink:#e6e9ef; --mut:#8a94a6; --dim:#3f4a5a;
+  --amber:#f5a623; --amber2:#fb9e1a; --gold1:#c98a1e; --gold2:#a9741a;
+  --rh:#22c55e; --l1:#7b8af0; --ok:#22c55e; --warn:#f5a623; --err:#e5484d;
 }
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(1100px 560px at 50% -10%,#0e1622,#0a0e14);
-  color:var(--ink);font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-.wrap{max-width:1000px;margin:0 auto;padding:20px 16px 70px}
-.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:4px}
-h1{font-size:18px;margin:0;letter-spacing:-.3px}
-.badge{font-size:11px;padding:3px 9px;border-radius:20px;border:1px solid #173a23;color:var(--ok)}
-.sub{color:var(--mut);font-size:12.5px;margin-bottom:16px}
-.sub b{color:var(--acc)}
+body{margin:0;min-height:100vh;
+  background:
+    radial-gradient(900px 520px at 50% 38%, rgba(245,166,35,.05), transparent 70%),
+    linear-gradient(180deg,#0b0e14 0%,#0b0e14 45%,#0c0f15 70%,#070a0f 100%);
+  color:var(--ink);font:14px/1.55 'Inter',ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1040px;margin:0 auto;padding:0 18px 80px}
+
+/* nav */
+nav{display:flex;align-items:center;gap:12px;padding:20px 2px 0;flex-wrap:wrap}
+.logo{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(150deg,#f7b53a,#e07d12);color:#1a1206;font-weight:800;font-size:18px;
+  box-shadow:0 6px 22px -6px rgba(245,166,35,.55)}
+.brand{display:flex;flex-direction:column;line-height:1.15}
+.brand b{font-size:16px;font-weight:700;letter-spacing:-.2px}
+.brand span{font-size:11.5px;color:var(--amber);opacity:.85}
+.navsp{flex:1}
+.nbtn{font:inherit;cursor:pointer;border-radius:10px;padding:9px 14px;font-weight:600;font-size:13px;
+  border:1px solid var(--line);background:#1a1f2b;color:var(--ink);display:flex;align-items:center;gap:7px;transition:.15s}
+.nbtn:hover{border-color:#2a3140;background:#1f2532}
+.nbtn.amber{background:var(--amber);color:#1a1206;border-color:transparent}
+.nbtn.amber:hover{background:#ffb52e}
+
+/* hero */
+.hero{text-align:center;padding:54px 0 30px}
+.hero h1{font-size:42px;line-height:1.1;font-weight:800;letter-spacing:-1px;margin:0 auto;max-width:760px}
+.hero h1 .a{color:var(--amber)}
+.hero p{color:var(--mut);font-size:16.5px;margin:16px auto 0;max-width:560px}
+.trust{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin:26px 0 0}
+.trust div{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut)}
+.trust .ic{color:var(--amber)}
+
 /* tabs */
-.tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-.tab{cursor:pointer;padding:10px 14px;border-radius:11px;border:1.5px solid var(--line);
-  background:linear-gradient(180deg,var(--panel),var(--panel2));font-weight:600;font-size:13px;
-  display:flex;align-items:center;gap:8px;transition:.15s}
-.tab:hover{border-color:#33415a}
-.tab.active.rh{border-color:var(--rh);box-shadow:0 0 0 1px var(--rh)}
-.tab.active.l1{border-color:var(--l1);box-shadow:0 0 0 1px var(--l1)}
+.tabs{display:flex;gap:10px;justify-content:center;margin:18px 0 16px;flex-wrap:wrap}
+.tab{cursor:pointer;padding:11px 16px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:9px;transition:.15s}
+.tab:hover{border-color:#2a3140}
+.tab.active{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
 .tab .cnt{font-size:11px;background:#0b1018;border:1px solid var(--line);border-radius:20px;padding:1px 8px;color:var(--mut)}
-.tab .ic{width:9px;height:9px;border-radius:50%}
+.tab .ic{width:10px;height:10px;border-radius:50%}
 .tab.rh .ic{background:var(--rh)} .tab.l1 .ic{background:var(--l1)}
-.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+
+.toolbar{display:flex;align-items:center;gap:10px;margin:0 auto 16px;max-width:920px;flex-wrap:wrap}
+.toolbar .hint{font-size:12.5px;color:var(--mut)}
 .toolbar .spacer{flex:1}
-button{font:inherit;cursor:pointer;border-radius:9px;border:1px solid var(--line);
-  background:#18202c;color:var(--ink);padding:8px 13px;transition:.15s}
-button:hover:not(:disabled){border-color:var(--acc);background:#1d2735}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);
+  background:#1a1f2b;color:var(--ink);padding:9px 14px;font-weight:600;transition:.15s}
+button:hover:not(:disabled){border-color:#2a3140;background:#1f2532}
 button:disabled{opacity:.4;cursor:not-allowed}
-button.primary{background:linear-gradient(180deg,#1f6feb,#1456c4);border-color:#2d72e0}
-button.primary:hover:not(:disabled){background:linear-gradient(180deg,#2880ff,#1860d0)}
-button.rh{background:linear-gradient(180deg,#6d4fd0,#5a3eb8);border-color:#7a5ce0}
-button.l1{background:linear-gradient(180deg,#2a9d7f,#1f8068);border-color:#36b894}
+button.amber{background:var(--amber);color:#1a1206;border-color:transparent}
+button.amber:hover:not(:disabled){background:#ffb52e}
 button.ghost{background:transparent}
 button.danger{background:#2a1416;border-color:#5a2226;color:#ff9b8a}
+
 /* grid */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
-.card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
-  border-radius:14px;padding:14px;position:relative;transition:.15s}
-.card.rh{box-shadow:inset 0 0 0 1px #2a2140}
-.card.l1{box-shadow:inset 0 0 0 1px #16332b}
-.card:hover{transform:translateY(-2px);border-color:#33415a}
-.ctop{display:flex;align-items:center;gap:8px;margin-bottom:10px}
-.avatar{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:700}
-.card.rh .avatar{background:#241b3d;color:#c4a5ff}
-.card.l1 .avatar{background:#11302a;color:#7fe3c4}
-.maker{font-size:12.5px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:920px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;position:relative;
+  transition:.15s;box-shadow:0 10px 34px -22px rgba(0,0,0,.9)}
+.card.l1{border-color:rgba(123,138,240,.28)}
+.card.rh{border-color:rgba(34,197,94,.22)}
+.card:hover{transform:translateY(-2px)}
+.ctop{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.avatar{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800}
+.card.rh .avatar{background:rgba(34,197,94,.14);color:var(--rh)}
+.card.l1 .avatar{background:rgba(123,138,240,.16);color:var(--l1)}
+.maker{font-size:13px;font-weight:600}
 .maker .id{color:var(--mut);font-weight:400;font-size:11px}
-.want{margin-left:auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px}
-.card.rh .want{background:#241b3d;color:#c4a5ff}
-.card.l1 .want{background:#11302a;color:#7fe3c4}
-.swapline{display:flex;align-items:center;gap:10px;background:#0b1018;border:1px solid var(--line);
-  border-radius:11px;padding:11px 12px;margin-bottom:10px}
+.want{margin-left:auto;font-size:10px;font-weight:700;padding:4px 9px;border-radius:20px;letter-spacing:.2px}
+.card.rh .want{background:rgba(34,197,94,.12);color:var(--rh)}
+.card.l1 .want{background:rgba(123,138,240,.14);color:var(--l1)}
+.swapline{display:flex;align-items:center;gap:10px;background:var(--inset);border:1px solid var(--line);
+  border-radius:14px;padding:13px 12px;margin-bottom:12px}
 .side{flex:1;text-align:center}
 .side .lbl{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
-.side .amt{font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
-.side .chain{font-size:10.5px;margin-top:1px}
+.side .amt{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:3px}
+.side .chain{font-size:10.5px;margin-top:2px}
 .side .chain.rh{color:var(--rh)} .side .chain.l1{color:var(--l1)}
-.swaparrow{color:var(--mut);font-size:16px}
-.meta{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-bottom:11px}
-.rate{color:var(--ink);font-variant-numeric:tabular-nums}
+.swaparrow{color:var(--amber);font-size:17px}
+.meta{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);margin-bottom:12px}
+.rate{color:var(--mut);font-variant-numeric:tabular-nums}
 .take{width:100%}
-.empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:40px 0;font-size:13px}
+.empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:44px 0;font-size:13px}
+
+/* footer */
+.feepill{display:flex;align-items:center;gap:8px;margin:30px auto 0;width:fit-content;
+  background:#1a1f2b;border:1px solid var(--line);border-radius:22px;padding:8px 16px;font-size:12.5px;color:var(--mut)}
+.feepill b{color:var(--amber);font-weight:700}
+.foot{margin-top:14px;color:var(--mut);font-size:11.5px;text-align:center;line-height:1.7}
+.foot .dim{color:var(--dim)}
+a{color:var(--amber);text-decoration:none}
+
 /* modal */
-.modal-bg{position:fixed;inset:0;background:rgba(4,7,11,.74);backdrop-filter:blur(3px);
+.modal-bg{position:fixed;inset:0;background:rgba(4,7,11,.78);backdrop-filter:blur(4px);
   display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
 .modal-bg.show{display:flex}
-.modal{background:linear-gradient(180deg,#141b27,#0e141d);border:1px solid var(--line);
-  border-radius:16px;padding:18px;max-width:480px;width:100%;max-height:92vh;overflow:auto}
-.modal h3{margin:0 0 3px;font-size:16px}
-.modal .msub{color:var(--mut);font-size:12px;margin-bottom:14px}
-.mrow{display:flex;justify-content:space-between;gap:8px;padding:4px 0;font-size:12.5px}
+.modal{background:linear-gradient(180deg,#121826,#0c111a);border:1px solid var(--line);position:relative;
+  border-radius:20px;padding:20px;max-width:480px;width:100%;max-height:92vh;overflow:auto;
+  box-shadow:0 30px 80px -30px rgba(0,0,0,.9)}
+.modal h3{margin:0 0 3px;font-size:17px}
+.modal .msub{color:var(--mut);font-size:12.5px;margin-bottom:15px}
+.mrow{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:12.5px}
 .mrow .k{color:var(--mut)} .mrow .v{font-variant-numeric:tabular-nums;text-align:right}
-/* timeline */
-.tl{margin:14px 0 6px;border-left:2px solid var(--line);padding-left:0}
+.tl{margin:15px 0 6px;border-left:2px solid var(--line);padding-left:0}
 .tlstep{position:relative;padding:8px 0 8px 26px;font-size:12.5px;color:var(--mut)}
 .tlstep::before{content:'';position:absolute;left:-7px;top:11px;width:12px;height:12px;border-radius:50%;
   background:#0e141d;border:2px solid var(--line)}
 .tlstep.done{color:var(--ink)}
 .tlstep.done::before{background:var(--ok);border-color:var(--ok)}
-.tlstep.active{color:#79c0ff}
-.tlstep.active::before{background:#79c0ff;border-color:#79c0ff;animation:pulse 1.2s infinite}
+.tlstep.active{color:var(--amber)}
+.tlstep.active::before{background:var(--amber);border-color:var(--amber);animation:pulse 1.2s infinite}
 .tlstep.err::before{background:var(--err);border-color:var(--err)}
 .tlstep.warn::before{background:var(--warn);border-color:var(--warn)}
 .tlstep .sm{display:block;font-size:11px;color:var(--mut);margin-top:1px}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(121,192,255,.5)}50%{box-shadow:0 0 0 5px rgba(121,192,255,0)}}
-.mfoot{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.rpcrow{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
-.pill{font-size:11px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);cursor:pointer;user-select:none}
-.pill.up{color:var(--ok);border-color:#173a23}
-.pill.down{color:var(--err);border-color:#3a1718;background:#1a0f10}
-.statusbar{margin-top:12px;padding:10px 12px;border-radius:10px;font-size:12.5px;font-weight:600;text-align:center}
-.statusbar.run{background:#0d2847;color:#79c0ff}
-.statusbar.ok{background:#102a18;color:var(--ok)}
-.statusbar.err{background:#2a1410;color:#ff9b72}
-.field{margin-bottom:11px}
-.field label{display:block;font-size:11.5px;color:var(--mut);margin-bottom:5px}
-.field input,.field select{width:100%;background:#0b1018;border:1px solid var(--line);border-radius:9px;
-  color:var(--ink);padding:9px 11px;font:inherit}
-.note{font-size:11px;color:var(--mut);margin-top:10px;line-height:1.5}
-.kbd{font:11px ui-monospace,monospace;background:#0b1018;border:1px solid var(--line);
-  border-bottom-width:2px;border-radius:5px;padding:1px 6px;color:#cdd6e0}
-.foot{margin-top:24px;color:var(--mut);font-size:11px;text-align:center;line-height:1.6}
-a{color:var(--acc)}
-.x{position:absolute;top:14px;right:16px;cursor:pointer;color:var(--mut);font-size:20px;line-height:1}
-.modal{position:relative}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,.5)}50%{box-shadow:0 0 0 5px rgba(245,166,35,0)}}
+.mfoot{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
+.rpcrow{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+.pill{font-size:11px;padding:6px 11px;border-radius:9px;border:1px solid var(--line);cursor:pointer;user-select:none}
+.pill.up{color:var(--ok);border-color:rgba(34,197,94,.3)}
+.pill.down{color:var(--err);border-color:rgba(229,72,77,.4);background:#1a0f10}
+.statusbar{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:12.5px;font-weight:600;text-align:center}
+.statusbar.run{background:rgba(245,166,35,.1);color:var(--amber)}
+.statusbar.ok{background:rgba(34,197,94,.12);color:var(--ok)}
+.statusbar.err{background:rgba(229,72,77,.12);color:#ff9b72}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11.5px;color:var(--mut);margin-bottom:6px}
+.field input,.field select{width:100%;background:var(--inset);border:1px solid var(--line);border-radius:10px;
+  color:var(--ink);padding:10px 12px;font:inherit}
+.note{font-size:11px;color:var(--mut);margin-top:10px;line-height:1.55}
+.swapline2{display:flex;align-items:center;gap:10px;background:var(--inset);border:1px solid var(--line);
+  border-radius:14px;padding:13px 12px;margin-bottom:13px}
+.x{position:absolute;top:15px;right:17px;cursor:pointer;color:var(--mut);font-size:21px;line-height:1}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <h1>OTC Grid — Robinhood ⇄ Ethereum L1</h1>
-    <span class="badge">● trustless · HTLC · 0 backend</span>
-  </div>
-  <div class="sub">
-    Maker buka order, langsung muncul di grid. Taker tinggal pilih kartu lalu <b>Ambil</b> — swap atomik HTLC jalan otomatis.
-    Tanpa bridge, tanpa kustodian. Worst case = <b>refund</b>.
+  <nav>
+    <div class="logo">&lt;/&gt;</div>
+    <div class="brand"><b>RoboBridge OTC</b><span>Robinhood ⇄ Ethereum</span></div>
+    <div class="navsp"></div>
+    <button class="nbtn">+ Add Robinhood</button>
+    <button class="nbtn amber" onclick="openCreate()">Buat Order</button>
+  </nav>
+
+  <div class="hero">
+    <h1>OTC swap antara <span class="a">Robinhood</span> dan <span class="a">Ethereum</span>, trustless dalam hitungan menit</h1>
+    <p>Maker buka order, langsung muncul di grid. Taker tinggal pilih kartu lalu Ambil — swap atomik HTLC jalan otomatis. Tanpa bridge, tanpa kustodian.</p>
+    <div class="trust">
+      <div><span class="ic">◈</span> Non-custodial</div>
+      <div><span class="ic">⚡</span> Worst case = refund</div>
+      <div><span class="ic">◷</span> HTLC · keccak256 asli</div>
+    </div>
   </div>
 
   <div class="tabs">
@@ -137,18 +176,21 @@ a{color:var(--acc)}
   </div>
 
   <div class="toolbar">
-    <span style="font-size:12px;color:var(--mut)" id="tabhint"></span>
+    <span class="hint" id="tabhint"></span>
     <span class="spacer"></span>
     <button class="ghost" onclick="seedMore()">+ Simulasi maker baru</button>
-    <button class="primary" onclick="openCreate()">+ Buat order (jadi maker)</button>
+    <button class="amber" onclick="openCreate()">+ Buat order (jadi maker)</button>
   </div>
 
   <div class="grid" id="grid"></div>
 
+  <div class="feepill">
+    <span>◷</span> Fee platform: <b>3% per swap berhasil</b> · dipotong on-chain ke fee wallet
+  </div>
   <div class="foot">
-    Mekanik HTLC diuji on-chain (Foundry) — <b>10/10 PASS</b>. keccak256 dihitung ASLI di browser.
-    Simulasi edukatif; belum tersambung wallet/chain nyata. ·
-    <a href="https://github.com/hijakess/htlc-otc-robinhood" target="_blank">source</a>
+    Non-custodial · Kamu tanda tangan tiap transaksi · Mekanik HTLC diuji on-chain (Foundry) <b>14/14 PASS</b> termasuk fee 3% &amp; fuzz.
+    <br><span class="dim">Robinhood Chain (4663) ⇄ Ethereum Mainnet (1) · simulasi edukatif, keccak256 dihitung asli di browser ·
+    <a href="https://github.com/hijakess/htlc-otc-robinhood" target="_blank">source</a></span>
   </div>
 </div>
 
@@ -159,17 +201,17 @@ a{color:var(--acc)}
     <h3 id="tmTitle">Ambil tawaran</h3>
     <div class="msub" id="tmSub"></div>
 
-    <div class="swapline">
+    <div class="swapline2">
       <div class="side"><div class="lbl">Kamu kasih</div><div class="amt" id="tmGive">—</div><div class="chain" id="tmGiveC">—</div></div>
       <div class="swaparrow">→</div>
       <div class="side"><div class="lbl">Kamu terima</div><div class="amt" id="tmGet">—</div><div class="chain" id="tmGetC">—</div></div>
     </div>
 
     <div class="mrow"><span class="k">Rate</span><span class="v" id="tmRate">—</span></div>
-    <div class="mrow"><span class="k">Fee platform (3%)</span><span class="v" id="tmFee" style="color:var(--warn)">—</span></div>
+    <div class="mrow"><span class="k">Fee platform (3%)</span><span class="v" id="tmFee" style="color:var(--amber)">—</span></div>
     <div class="mrow"><span class="k">Maker lock di</span><span class="v" id="tmMakerSide">—</span> </div>
     <div class="mrow"><span class="k">Kamu lock di</span><span class="v" id="tmTakerSide">—</span></div>
-    <div class="mrow"><span class="k">hashlock</span><span class="v" id="tmHash" style="font:11px ui-monospace,monospace;color:var(--rh)">—</span></div>
+    <div class="mrow"><span class="k">hashlock</span><span class="v" id="tmHash" style="font:11px ui-monospace,monospace;color:var(--amber)">—</span></div>
 
     <div class="tl" id="tmTL"></div>
 
@@ -181,11 +223,11 @@ a{color:var(--acc)}
     <div class="statusbar run" id="tmStatus" style="display:none"></div>
 
     <div class="mfoot">
-      <button class="primary" id="tmGo" onclick="runSwap()">⚡ Ambil & mulai swap</button>
+      <button class="amber" id="tmGo" onclick="runSwap()">⚡ Ambil &amp; mulai swap</button>
       <button class="ghost" onclick="closeModal()">Tutup</button>
     </div>
     <div class="note">
-      Begitu kamu klik Ambil: kamu lock di sisi bayar (timelock pendek), maker reveal & klaim, lalu kamu otomatis
+      Begitu kamu klik Ambil: kamu lock di sisi bayar (timelock pendek), maker reveal &amp; klaim, lalu kamu otomatis
       klaim di sisi terima (timelock panjang). Coba matikan RPC di tengah jalan — dana tetap aman, auto-retry saat pulih.
     </div>
   </div>
@@ -210,7 +252,7 @@ a{color:var(--acc)}
     </div>
     <div class="note" id="cPreview"></div>
     <div class="mfoot">
-      <button class="primary" onclick="createOrder()">Publikasikan order</button>
+      <button class="amber" onclick="createOrder()">Publikasikan order</button>
       <button class="ghost" onclick="closeCreate()">Batal</button>
     </div>
   </div>
@@ -245,19 +287,12 @@ return function(bytes){const rate=136;let s=new Array(25).fill(0n);
  return '0x'+[...out].map(b=>b.toString(16).padStart(2,'0')).join('');};})();
 function strBytes(s){return new TextEncoder().encode(s);}
 
-/* ───────── data model ─────────
- order.want = 'rh' | 'l1'  -> chain yang MAKER butuh (akan maker terima)
- maker pays on the OTHER chain.
- Untuk TAKER yang ambil:
-   taker GIVES order.want (maker butuh itu), taker GETS order.pay
-   recvChain (taker terima) = pay  -> LONG timelock, maker lock di sini
-   payChain  (taker bayar)  = want -> SHORT timelock, taker lock di sini
-*/
+/* ───────── data model ───────── */
 const NAME={l1:'Ethereum L1', rh:'Robinhood'};
 const ASSET={l1:'ETH L1', rh:'ETH Robinhood'};
 const SHORT=6, LONG=12; // jam (display)
-const FEE_BPS=300; // 3% platform fee, dipotong dari jumlah yang taker terima saat swap berhasil
-const FEE_WALLET='0x6a15…9786b'; // FeeRouter
+const FEE_BPS=300; // 3% platform fee — sama dgn platformFeeBps di kontrak HTLC.sol
+const FEE_WALLET='0x04FA…B2f3'; // HTLC feeWallet (on-chain)
 function netAfterFee(g){return g*(1-FEE_BPS/10000);}
 function feeAmt(g){return g*FEE_BPS/10000;}
 let orders=[];
@@ -298,9 +333,7 @@ function render(){
   g.innerHTML = list.map(o=>card(o)).join('');
 }
 function card(o){
-  // taker view: gives o.want, gets o.pay
   const giveC=o.want, getC=o.pay;
-  const rate=(o.amtGive/o.amtWant);
   return `<div class="card ${o.want}">
     <div class="ctop">
       <div class="avatar">${o.want==='rh'?'R':'L'}</div>
@@ -320,7 +353,7 @@ function card(o){
       <span>Order #${o.id}</span>
       <span class="rate">−3% fee · bruto ${o.amtGive.toFixed(3)}</span>
     </div>
-    <button class="take ${o.want}" onclick="openTake(${o.id})">Ambil tawaran ►</button>
+    <button class="take amber" onclick="openTake(${o.id})">Ambil tawaran ►</button>
   </div>`;
 }
 
@@ -333,8 +366,8 @@ function genSecret(){const r=crypto.getRandomValues(new Uint8Array(16));
 function openTake(id){
   cur=orders.find(o=>o.id===id); if(!cur)return;
   rpc={rh:true,l1:true}; swapBusy=false; autoPending=false; genSecret();
-  const giveC=cur.want, getC=cur.pay;          // taker gives want, gets pay
-  const recvChain=cur.pay, payChain=cur.want;  // recv=LONG, pay=SHORT
+  const giveC=cur.want, getC=cur.pay;
+  const recvChain=cur.pay, payChain=cur.want;
   document.getElementById('tmTitle').textContent='Ambil tawaran #'+cur.id;
   document.getElementById('tmSub').innerHTML=`Maker <b>${cur.maker}</b> butuh ${ASSET[cur.want]}.`;
   document.getElementById('tmGive').textContent=cur.amtWant.toFixed(3);
@@ -388,21 +421,17 @@ function updateRpcPills(){
   }
 }
 function toggleRpc(c){rpc[c]=!rpc[c];updateRpcPills();
-  if(rpc[c]&&autoPending){const recvChain=cur.pay; if(c===recvChain){status('RPC '+NAME[c]+' pulih — lanjut klaim…','run');setTimeout(()=>doClaim(),500);}}
-}
+  if(rpc[c]&&autoPending){const recvChain=cur.pay; if(c===recvChain){status('RPC '+NAME[c]+' pulih — lanjut klaim…','run');setTimeout(()=>doClaim(),500);}}}
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function runSwap(){
   if(swapBusy||!cur)return; swapBusy=true; autoPending=false;
   document.getElementById('tmGo').disabled=true;
   const recvChain=cur.pay, payChain=cur.want;
-  // 1 maker lock (recv, LONG)
   setStep('maker_lock','active'); status('Maker lock di '+NAME[recvChain]+'…','run'); await sleep(700);
   setStep('maker_lock','done');
-  // 2 taker lock (pay, SHORT)
   setStep('taker_lock','active'); status('Kamu lock di '+NAME[payChain]+'…','run'); await sleep(700);
   setStep('taker_lock','done');
-  // 3 reveal on pay chain
   setStep('reveal','active'); status('Maker reveal secret di '+NAME[payChain]+'…','run'); await sleep(500);
   if(!rpc[payChain]){
     setStep('reveal','err'); status('RPC '+NAME[payChain]+' DOWN — reveal tertunda. Dana aman terkunci. Nyalakan RPC lalu klik Ambil lagi.','err');
@@ -410,7 +439,6 @@ async function runSwap(){
   }
   const ok = keccak256(strBytes(secret))===hashlock;
   setStep('reveal','done'); status('Secret terbuka on-chain · keccak256(secret)==hashlock → '+ok,'run'); await sleep(700);
-  // 4 claim on recv chain
   await doClaim();
 }
 async function doClaim(){
@@ -425,7 +453,6 @@ async function doClaim(){
   autoPending=false;
   setStep('claim','done'); setStep('fee','done'); setStep('done','done');
   status('✅ Swap selesai — kamu terima '+netAfterFee(cur.amtGive).toFixed(3)+' '+ASSET[cur.pay]+' (fee platform 3% = '+feeAmt(cur.amtGive).toFixed(4)+' dipotong → '+FEE_WALLET+'). Order ditutup.','ok');
-  // remove filled order
   orders=orders.filter(o=>o.id!==cur.id); render();
   swapBusy=false;
 }
@@ -446,13 +473,13 @@ function createOrder(){
   const want=document.getElementById('cWant').value;
   const aw=parseFloat(document.getElementById('cAmtWant').value||'0');
   if(aw<=0){alert('Jumlah harus > 0');return;}
-  addOrder(want,aw,aw,'0x04FA…B2f3'); // user = main wallet, bruto = input (1:1)
+  addOrder(want,aw,aw,'0x04FA…B2f3');
   activeTab=want; setTab(want); closeCreate();
 }
 function seedMore(){
   const want=Math.random()<0.5?'rh':'l1';
   const aw=+(0.1+Math.random()*2).toFixed(2);
-  addOrder(want,aw,aw); // bruto = input (1:1)
+  addOrder(want,aw,aw);
   setTab(want);
 }
 
