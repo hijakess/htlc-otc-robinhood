@@ -171,7 +171,6 @@ code{font:11px ui-monospace,monospace;color:#cdd6e0}
   <div class="toolbar">
     <span class="hint" id="tabhint"></span>
     <span class="spacer"></span>
-    <button class="ghost" onclick="seedMore()">+ Simulate maker</button>
     <button class="amber" onclick="openCreate()">+ Create order (be a maker)</button>
   </div>
 
@@ -351,7 +350,7 @@ function genSecret(){
 }
 
 /* ============ order book (intent layer, localStorage) ============ */
-const LS='rb_otc_orders_v1';
+const LS='rb_otc_orders_v2';
 let orders=[]; let activeTab='rh'; let oid=1;
 function load(){ try{const r=JSON.parse(localStorage.getItem(LS)); if(r&&r.orders){orders=r.orders; oid=r.oid||orders.length+1;}}catch(e){} }
 function save(){ localStorage.setItem(LS, JSON.stringify({orders, oid})); }
@@ -359,11 +358,7 @@ function other(c){return c==='rh'?'l1':'rh';}
 function netAfterFee(g){return g*(1-FEE_BPS/10000);}
 function feeAmt(g){return g*FEE_BPS/10000;}
 function shortAddr(a){return a?a.slice(0,6)+'…'+a.slice(-4):'maker';}
-function seedIfEmpty(){
-  if(orders.length) return;
-  addOrder('rh',0.01,'0x7a3f…2b1c'); addOrder('rh',0.02,'0x9c12…8de4');
-  addOrder('l1',0.01,'0xdead…beef'); save();
-}
+function seedIfEmpty(){ /* market starts empty — real orders only */ }
 function addOrder(want,amt,maker){ orders.push({id:oid++,want,pay:other(want),amt:amt,maker:maker||'0x????…????',ts:Date.now()}); }
 
 function setTab(t){activeTab=t;
@@ -377,7 +372,7 @@ function render(){
     ? 'These makers need <b style="color:var(--rh)">ETH on Robinhood</b>. If you take one &rarr; you <b>give ETH on Robinhood</b>, <b>receive ETH on L1</b>.'
     : 'These makers need <b style="color:var(--l1)">ETH on L1</b>. If you take one &rarr; you <b>give ETH on L1</b>, <b>receive ETH on Robinhood</b>.';
   const list=activeTab==='rh'?rh:l1, g=document.getElementById('grid');
-  if(!list.length){g.innerHTML='<div class="empty">No orders in this category yet. Click &ldquo;+ Create order&rdquo; or &ldquo;+ Simulate maker&rdquo;.</div>';return;}
+  if(!list.length){g.innerHTML='<div class="empty">No open orders yet. Click &ldquo;+ Create order&rdquo; to post one.</div>';return;}
   g.innerHTML=list.map(card).join('');
 }
 function card(o){
@@ -519,7 +514,7 @@ function createOrder(){
   if(account) orders[orders.length-1].makerAddr=account;
   save(); activeTab=want; setTab(want); closeCreate();
 }
-function seedMore(){ const want=Math.random()<0.5?'rh':'l1'; const aw=+(0.005+Math.random()*0.03).toFixed(3); addOrder(want,aw); save(); setTab(want); }
+
 
 /* ============ live fee check from chain ============ */
 async function verifyFeeOnChain(){
