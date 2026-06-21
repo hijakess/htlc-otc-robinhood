@@ -166,6 +166,7 @@ a{color:var(--acc)}
     </div>
 
     <div class="mrow"><span class="k">Rate</span><span class="v" id="tmRate">—</span></div>
+    <div class="mrow"><span class="k">Fee platform (3%)</span><span class="v" id="tmFee" style="color:var(--warn)">—</span></div>
     <div class="mrow"><span class="k">Maker lock di</span><span class="v" id="tmMakerSide">—</span> </div>
     <div class="mrow"><span class="k">Kamu lock di</span><span class="v" id="tmTakerSide">—</span></div>
     <div class="mrow"><span class="k">hashlock</span><span class="v" id="tmHash" style="font:11px ui-monospace,monospace;color:var(--rh)">—</span></div>
@@ -259,6 +260,10 @@ function strBytes(s){return new TextEncoder().encode(s);}
 const NAME={l1:'Ethereum L1', rh:'Robinhood'};
 const ASSET={l1:'ETH L1', rh:'ETH Robinhood'};
 const SHORT=6, LONG=12; // jam (display)
+const FEE_BPS=300; // 3% platform fee, dipotong dari jumlah yang taker terima saat swap berhasil
+const FEE_WALLET='0x6a15…9786b'; // FeeRouter
+function netAfterFee(g){return g*(1-FEE_BPS/10000);}
+function feeAmt(g){return g*FEE_BPS/10000;}
 let orders=[];
 let activeTab='rh';
 let oid=1;
@@ -312,12 +317,12 @@ function card(o){
         <div class="chain ${giveC}">${ASSET[giveC]}</div></div>
       <div class="swaparrow">→</div>
       <div class="side"><div class="lbl">Kamu terima</div>
-        <div class="amt">${o.amtGive.toFixed(3)}</div>
+        <div class="amt">${netAfterFee(o.amtGive).toFixed(3)}</div>
         <div class="chain ${getC}">${ASSET[getC]}</div></div>
     </div>
     <div class="meta">
       <span>Order #${o.id}</span>
-      <span class="rate">1 ${ASSET[giveC].split(' ')[0]} ≈ ${rate.toFixed(3)} ${ASSET[getC].split(' ')[0]}</span>
+      <span class="rate">−3% fee · bruto ${o.amtGive.toFixed(3)}</span>
     </div>
     <button class="take ${o.want}" onclick="openTake(${o.id})">Ambil tawaran ►</button>
   </div>`;
@@ -339,10 +344,11 @@ function openTake(id){
   document.getElementById('tmGive').textContent=cur.amtWant.toFixed(3);
   document.getElementById('tmGiveC').textContent=ASSET[giveC];
   document.getElementById('tmGiveC').className='chain '+giveC;
-  document.getElementById('tmGet').textContent=cur.amtGive.toFixed(3);
+  document.getElementById('tmGet').textContent=netAfterFee(cur.amtGive).toFixed(3);
   document.getElementById('tmGetC').textContent=ASSET[getC];
   document.getElementById('tmGetC').className='chain '+getC;
-  document.getElementById('tmRate').textContent=`1 ${ASSET[giveC].split(' ')[0]} ≈ ${(cur.amtGive/cur.amtWant).toFixed(4)} ${ASSET[getC].split(' ')[0]}`;
+  document.getElementById('tmRate').textContent=`bruto ${cur.amtGive.toFixed(3)} ${ASSET[getC].split(' ')[0]} − fee 3% (${feeAmt(cur.amtGive).toFixed(4)}) = ${netAfterFee(cur.amtGive).toFixed(4)}`;
+  document.getElementById('tmFee').textContent=`− ${feeAmt(cur.amtGive).toFixed(4)} ${ASSET[getC].split(' ')[0]} → ${FEE_WALLET}`;
   document.getElementById('tmMakerSide').innerHTML=`${NAME[recvChain]} <span style="color:var(--mut)">· timelock ${LONG}j (LONG)</span>`;
   document.getElementById('tmTakerSide').innerHTML=`${NAME[payChain]} <span style="color:var(--mut)">· timelock ${SHORT}j (SHORT)</span>`;
   document.getElementById('tmHash').textContent=hashlock.slice(0,26)+'…';
@@ -359,7 +365,8 @@ const STEPS=[
   {k:'taker_lock', t:'Kamu lock dana di sisi bayar', sm:'timelock pendek (SHORT)'},
   {k:'reveal', t:'Maker reveal secret & klaim sisi bayar', sm:'secret terbuka on-chain'},
   {k:'claim', t:'Kamu klaim sisi terima (otomatis)', sm:'pakai secret yang terbuka'},
-  {k:'done', t:'Swap atomik selesai', sm:'dana sampai di kedua pihak'},
+  {k:'fee', t:'Fee platform 3% dipotong', sm:'dari jumlah diterima → fee wallet'},
+  {k:'done', t:'Swap atomik selesai', sm:'dana net sampai di kedua pihak'},
 ];
 let stepState={};
 function buildTimeline(){
@@ -420,8 +427,8 @@ async function doClaim(){
   }
   status('Kamu klaim di '+NAME[recvChain]+'…','run'); await sleep(700);
   autoPending=false;
-  setStep('claim','done'); setStep('done','done');
-  status('✅ Swap selesai — kamu terima '+cur.amtGive.toFixed(3)+' '+ASSET[cur.pay]+'. Order ditutup.','ok');
+  setStep('claim','done'); setStep('fee','done'); setStep('done','done');
+  status('✅ Swap selesai — kamu terima '+netAfterFee(cur.amtGive).toFixed(3)+' '+ASSET[cur.pay]+' (fee platform 3% = '+feeAmt(cur.amtGive).toFixed(4)+' dipotong → '+FEE_WALLET+'). Order ditutup.','ok');
   // remove filled order
   orders=orders.filter(o=>o.id!==cur.id); render();
   swapBusy=false;
