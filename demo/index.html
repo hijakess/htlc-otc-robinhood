@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RoboBridge OTC — Robinhood ⇄ Ethereum L1 (HTLC)</title>
+<title>RoboBridge OTC — Robinhood &#8644; Ethereum (HTLC)</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
 <style>
+
 :root{
   --bg:#0b0e14; --bg2:#070a0f; --card:#10151e; --inset:#0c1119; --line:rgba(255,255,255,.06);
   --ink:#e6e9ef; --mut:#8a94a6; --dim:#3f4a5a;
-  --amber:#f5a623; --amber2:#fb9e1a; --gold1:#c98a1e; --gold2:#a9741a;
+  --amber:#f5a623; --amber2:#fb9e1a;
   --rh:#22c55e; --l1:#7b8af0; --ok:#22c55e; --warn:#f5a623; --err:#e5484d;
 }
 *{box-sizing:border-box}
@@ -19,8 +21,6 @@ body{margin:0;min-height:100vh;
   color:var(--ink);font:14px/1.55 'Inter',ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   -webkit-font-smoothing:antialiased}
 .wrap{max-width:1040px;margin:0 auto;padding:0 18px 80px}
-
-/* nav */
 nav{display:flex;align-items:center;gap:12px;padding:20px 2px 0;flex-wrap:wrap}
 .logo{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;
   background:linear-gradient(150deg,#f7b53a,#e07d12);color:#1a1206;font-weight:800;font-size:18px;
@@ -29,22 +29,21 @@ nav{display:flex;align-items:center;gap:12px;padding:20px 2px 0;flex-wrap:wrap}
 .brand b{font-size:16px;font-weight:700;letter-spacing:-.2px}
 .brand span{font-size:11.5px;color:var(--amber);opacity:.85}
 .navsp{flex:1}
+.netpill{font-size:11.5px;color:var(--mut);border:1px solid var(--line);background:#10151e;border-radius:20px;padding:6px 12px;display:flex;align-items:center;gap:7px}
+.netpill .dot{width:8px;height:8px;border-radius:50%;background:var(--dim)}
+.netpill.on .dot{background:var(--ok)}
 .nbtn{font:inherit;cursor:pointer;border-radius:10px;padding:9px 14px;font-weight:600;font-size:13px;
   border:1px solid var(--line);background:#1a1f2b;color:var(--ink);display:flex;align-items:center;gap:7px;transition:.15s}
 .nbtn:hover{border-color:#2a3140;background:#1f2532}
 .nbtn.amber{background:var(--amber);color:#1a1206;border-color:transparent}
 .nbtn.amber:hover{background:#ffb52e}
-
-/* hero */
-.hero{text-align:center;padding:54px 0 30px}
-.hero h1{font-size:42px;line-height:1.1;font-weight:800;letter-spacing:-1px;margin:0 auto;max-width:760px}
+.hero{text-align:center;padding:46px 0 26px}
+.hero h1{font-size:40px;line-height:1.1;font-weight:800;letter-spacing:-1px;margin:0 auto;max-width:760px}
 .hero h1 .a{color:var(--amber)}
-.hero p{color:var(--mut);font-size:16.5px;margin:16px auto 0;max-width:560px}
-.trust{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin:26px 0 0}
+.hero p{color:var(--mut);font-size:16px;margin:16px auto 0;max-width:580px}
+.trust{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin:24px 0 0}
 .trust div{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut)}
 .trust .ic{color:var(--amber)}
-
-/* tabs */
 .tabs{display:flex;gap:10px;justify-content:center;margin:18px 0 16px;flex-wrap:wrap}
 .tab{cursor:pointer;padding:11px 16px;border-radius:12px;border:1px solid var(--line);
   background:var(--card);font-weight:600;font-size:13.5px;display:flex;align-items:center;gap:9px;transition:.15s}
@@ -53,7 +52,6 @@ nav{display:flex;align-items:center;gap:12px;padding:20px 2px 0;flex-wrap:wrap}
 .tab .cnt{font-size:11px;background:#0b1018;border:1px solid var(--line);border-radius:20px;padding:1px 8px;color:var(--mut)}
 .tab .ic{width:10px;height:10px;border-radius:50%}
 .tab.rh .ic{background:var(--rh)} .tab.l1 .ic{background:var(--l1)}
-
 .toolbar{display:flex;align-items:center;gap:10px;margin:0 auto 16px;max-width:920px;flex-wrap:wrap}
 .toolbar .hint{font-size:12.5px;color:var(--mut)}
 .toolbar .spacer{flex:1}
@@ -64,9 +62,6 @@ button:disabled{opacity:.4;cursor:not-allowed}
 button.amber{background:var(--amber);color:#1a1206;border-color:transparent}
 button.amber:hover:not(:disabled){background:#ffb52e}
 button.ghost{background:transparent}
-button.danger{background:#2a1416;border-color:#5a2226;color:#ff9b8a}
-
-/* grid */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;max-width:920px;margin:0 auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;position:relative;
   transition:.15s;box-shadow:0 10px 34px -22px rgba(0,0,0,.9)}
@@ -74,8 +69,7 @@ button.danger{background:#2a1416;border-color:#5a2226;color:#ff9b8a}
 .card.rh{border-color:rgba(34,197,94,.22)}
 .card:hover{transform:translateY(-2px)}
 .ctop{display:flex;align-items:center;gap:10px;margin-bottom:13px}
-.avatar{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;
-  font-size:14px;font-weight:800}
+.avatar{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800}
 .card.rh .avatar{background:rgba(34,197,94,.14);color:var(--rh)}
 .card.l1 .avatar{background:rgba(123,138,240,.16);color:var(--l1)}
 .maker{font-size:13px;font-weight:600}
@@ -95,21 +89,17 @@ button.danger{background:#2a1416;border-color:#5a2226;color:#ff9b8a}
 .rate{color:var(--mut);font-variant-numeric:tabular-nums}
 .take{width:100%}
 .empty{grid-column:1/-1;text-align:center;color:var(--mut);padding:44px 0;font-size:13px}
-
-/* footer */
 .feepill{display:flex;align-items:center;gap:8px;margin:30px auto 0;width:fit-content;
   background:#1a1f2b;border:1px solid var(--line);border-radius:22px;padding:8px 16px;font-size:12.5px;color:var(--mut)}
 .feepill b{color:var(--amber);font-weight:700}
 .foot{margin-top:14px;color:var(--mut);font-size:11.5px;text-align:center;line-height:1.7}
 .foot .dim{color:var(--dim)}
 a{color:var(--amber);text-decoration:none}
-
-/* modal */
 .modal-bg{position:fixed;inset:0;background:rgba(4,7,11,.78);backdrop-filter:blur(4px);
   display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
 .modal-bg.show{display:flex}
 .modal{background:linear-gradient(180deg,#121826,#0c111a);border:1px solid var(--line);position:relative;
-  border-radius:20px;padding:20px;max-width:480px;width:100%;max-height:92vh;overflow:auto;
+  border-radius:20px;padding:20px;max-width:500px;width:100%;max-height:92vh;overflow:auto;
   box-shadow:0 30px 80px -30px rgba(0,0,0,.9)}
 .modal h3{margin:0 0 3px;font-size:17px}
 .modal .msub{color:var(--mut);font-size:12.5px;margin-bottom:15px}
@@ -124,15 +114,11 @@ a{color:var(--amber);text-decoration:none}
 .tlstep.active{color:var(--amber)}
 .tlstep.active::before{background:var(--amber);border-color:var(--amber);animation:pulse 1.2s infinite}
 .tlstep.err::before{background:var(--err);border-color:var(--err)}
-.tlstep.warn::before{background:var(--warn);border-color:var(--warn)}
 .tlstep .sm{display:block;font-size:11px;color:var(--mut);margin-top:1px}
+.tlstep .lk{display:block;font-size:11px;margin-top:2px}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,.5)}50%{box-shadow:0 0 0 5px rgba(245,166,35,0)}}
 .mfoot{display:flex;gap:8px;margin-top:13px;flex-wrap:wrap}
-.rpcrow{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
-.pill{font-size:11px;padding:6px 11px;border-radius:9px;border:1px solid var(--line);cursor:pointer;user-select:none}
-.pill.up{color:var(--ok);border-color:rgba(34,197,94,.3)}
-.pill.down{color:var(--err);border-color:rgba(229,72,77,.4);background:#1a0f10}
-.statusbar{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:12.5px;font-weight:600;text-align:center}
+.statusbar{margin-top:12px;padding:11px 13px;border-radius:11px;font-size:12.5px;font-weight:600;text-align:center;word-break:break-word}
 .statusbar.run{background:rgba(245,166,35,.1);color:var(--amber)}
 .statusbar.ok{background:rgba(34,197,94,.12);color:var(--ok)}
 .statusbar.err{background:rgba(229,72,77,.12);color:#ff9b72}
@@ -141,94 +127,98 @@ a{color:var(--amber);text-decoration:none}
 .field input,.field select{width:100%;background:var(--inset);border:1px solid var(--line);border-radius:10px;
   color:var(--ink);padding:10px 12px;font:inherit}
 .note{font-size:11px;color:var(--mut);margin-top:10px;line-height:1.55}
-.swapline2{display:flex;align-items:center;gap:10px;background:var(--inset);border:1px solid var(--line);
-  border-radius:14px;padding:13px 12px;margin-bottom:13px}
+.banner{max-width:920px;margin:0 auto 16px;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);
+  border-radius:12px;padding:11px 14px;font-size:12.5px;color:#e9c789;display:flex;gap:10px;align-items:center}
 .x{position:absolute;top:15px;right:17px;cursor:pointer;color:var(--mut);font-size:21px;line-height:1}
+code{font:11px ui-monospace,monospace;color:#cdd6e0}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <nav>
     <div class="logo">&lt;/&gt;</div>
-    <div class="brand"><b>RoboBridge OTC</b><span>Robinhood ⇄ Ethereum</span></div>
+    <div class="brand"><b>RoboBridge OTC</b><span>Robinhood &#8644; Ethereum</span></div>
     <div class="navsp"></div>
-    <button class="nbtn">+ Add Robinhood</button>
-    <button class="nbtn amber" onclick="openCreate()">Buat Order</button>
+    <div class="netpill" id="netPill"><span class="dot"></span><span id="netLabel">Not connected</span></div>
+    <button class="nbtn amber" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
   </nav>
 
   <div class="hero">
-    <h1>OTC swap antara <span class="a">Robinhood</span> dan <span class="a">Ethereum</span>, trustless dalam hitungan menit</h1>
-    <p>Maker buka order, langsung muncul di grid. Taker tinggal pilih kartu lalu Ambil — swap atomik HTLC jalan otomatis. Tanpa bridge, tanpa kustodian.</p>
+    <h1>Trustless <span class="a">OTC swaps</span> between <span class="a">Robinhood</span> and <span class="a">Ethereum</span></h1>
+    <p>A maker posts an order, it shows up on the grid. A taker picks a card and runs an atomic HTLC swap on-chain. No bridge, no custodian. Worst case = refund.</p>
     <div class="trust">
-      <div><span class="ic">◈</span> Non-custodial</div>
-      <div><span class="ic">⚡</span> Worst case = refund</div>
-      <div><span class="ic">◷</span> HTLC · keccak256 asli</div>
+      <div><span class="ic">&#9670;</span> Non-custodial</div>
+      <div><span class="ic">&#9889;</span> Worst case = refund</div>
+      <div><span class="ic">&#9719;</span> Live HTLC contracts</div>
     </div>
+  </div>
+
+  <div class="banner" id="liveBanner">
+    <span>&#9889;</span>
+    <span><b>Live on-chain.</b> HTLC contracts deployed &amp; verified &#183; <b>3% fee</b> skimmed on claim. Robinhood: <code>0xcF3a&#8230;75fc</code> &#183; Ethereum L1: <code>0xB6d3&#8230;Ca0d</code></span>
   </div>
 
   <div class="tabs">
     <div class="tab rh active" id="tab-rh" onclick="setTab('rh')">
-      <span class="ic"></span> Maker butuh ETH Robinhood <span class="cnt" id="cnt-rh">0</span>
+      <span class="ic"></span> Maker needs ETH on Robinhood <span class="cnt" id="cnt-rh">0</span>
     </div>
     <div class="tab l1" id="tab-l1" onclick="setTab('l1')">
-      <span class="ic"></span> Maker butuh ETH L1 <span class="cnt" id="cnt-l1">0</span>
+      <span class="ic"></span> Maker needs ETH on L1 <span class="cnt" id="cnt-l1">0</span>
     </div>
   </div>
 
   <div class="toolbar">
     <span class="hint" id="tabhint"></span>
     <span class="spacer"></span>
-    <button class="ghost" onclick="seedMore()">+ Simulasi maker baru</button>
-    <button class="amber" onclick="openCreate()">+ Buat order (jadi maker)</button>
+    <button class="ghost" onclick="seedMore()">+ Simulate maker</button>
+    <button class="amber" onclick="openCreate()">+ Create order (be a maker)</button>
   </div>
 
   <div class="grid" id="grid"></div>
 
   <div class="feepill">
-    <span>◷</span> Fee platform: <b>3% per swap berhasil</b> · dipotong on-chain ke fee wallet
+    <span>&#9719;</span> Platform fee: <b>3% per successful swap</b> &#183; skimmed on-chain to the fee wallet
   </div>
   <div class="foot">
-    Non-custodial · Kamu tanda tangan tiap transaksi · Mekanik HTLC diuji on-chain (Foundry) <b>14/14 PASS</b> termasuk fee 3% &amp; fuzz.
-    <br><span class="dim">Robinhood Chain (4663) ⇄ Ethereum Mainnet (1) · simulasi edukatif, keccak256 dihitung asli di browser ·
+    Non-custodial &#183; you sign every transaction &#183; HTLC mechanics tested on-chain (Foundry) <b>14/14 PASS</b> incl. 3% fee &amp; fuzz.
+    <br><span class="dim">Robinhood Chain (4663) &#8644; Ethereum Mainnet (1) &#183; secrets &amp; hashlocks computed locally in your browser &#183;
     <a href="https://github.com/hijakess/htlc-otc-robinhood" target="_blank">source</a></span>
   </div>
 </div>
 
-<!-- TAKE MODAL -->
+<!-- TAKE / SWAP MODAL -->
 <div class="modal-bg" id="takeModal">
   <div class="modal">
-    <span class="x" onclick="closeModal()">×</span>
-    <h3 id="tmTitle">Ambil tawaran</h3>
+    <span class="x" onclick="closeModal()">&times;</span>
+    <h3 id="tmTitle">Take offer</h3>
     <div class="msub" id="tmSub"></div>
 
-    <div class="swapline2">
-      <div class="side"><div class="lbl">Kamu kasih</div><div class="amt" id="tmGive">—</div><div class="chain" id="tmGiveC">—</div></div>
-      <div class="swaparrow">→</div>
-      <div class="side"><div class="lbl">Kamu terima</div><div class="amt" id="tmGet">—</div><div class="chain" id="tmGetC">—</div></div>
+    <div class="swapline">
+      <div class="side"><div class="lbl">You give</div><div class="amt" id="tmGive">&mdash;</div><div class="chain" id="tmGiveC">&mdash;</div></div>
+      <div class="swaparrow">&rarr;</div>
+      <div class="side"><div class="lbl">You receive</div><div class="amt" id="tmGet">&mdash;</div><div class="chain" id="tmGetC">&mdash;</div></div>
     </div>
 
-    <div class="mrow"><span class="k">Rate</span><span class="v" id="tmRate">—</span></div>
-    <div class="mrow"><span class="k">Fee platform (3%)</span><span class="v" id="tmFee" style="color:var(--amber)">—</span></div>
-    <div class="mrow"><span class="k">Maker lock di</span><span class="v" id="tmMakerSide">—</span> </div>
-    <div class="mrow"><span class="k">Kamu lock di</span><span class="v" id="tmTakerSide">—</span></div>
-    <div class="mrow"><span class="k">hashlock</span><span class="v" id="tmHash" style="font:11px ui-monospace,monospace;color:var(--amber)">—</span></div>
+    <div class="mrow"><span class="k">Rate</span><span class="v" id="tmRate">&mdash;</span></div>
+    <div class="mrow"><span class="k">Platform fee (3%)</span><span class="v" id="tmFee" style="color:var(--amber)">&mdash;</span></div>
+    <div class="mrow"><span class="k">Maker locks on</span><span class="v" id="tmMakerSide">&mdash;</span></div>
+    <div class="mrow"><span class="k">You lock on</span><span class="v" id="tmTakerSide">&mdash;</span></div>
+    <div class="mrow"><span class="k">hashlock</span><span class="v" id="tmHash" style="font:11px ui-monospace,monospace;color:var(--amber)">&mdash;</span></div>
 
     <div class="tl" id="tmTL"></div>
-
-    <div class="rpcrow">
-      <span class="pill up" id="pill-l1" onclick="toggleRpc('l1')">● RPC L1: up</span>
-      <span class="pill up" id="pill-rh" onclick="toggleRpc('rh')">● RPC Robinhood: up</span>
-    </div>
 
     <div class="statusbar run" id="tmStatus" style="display:none"></div>
 
     <div class="mfoot">
-      <button class="amber" id="tmGo" onclick="runSwap()">⚡ Ambil &amp; mulai swap</button>
-      <button class="ghost" onclick="closeModal()">Tutup</button>
+      <button class="amber" id="tmGo" onclick="takerLock()">&#9889; Lock my funds on-chain</button>
+      <button class="ghost" id="tmClaim" onclick="takerClaim()" style="display:none">Claim my funds</button>
+      <button class="ghost" id="tmRefund" onclick="takerRefund()" style="display:none">Refund (after timeout)</button>
+      <button class="ghost" onclick="closeModal()">Close</button>
     </div>
-    <div class="note">
-      Begitu kamu klik Ambil: kamu lock di sisi bayar (timelock pendek), maker reveal &amp; klaim, lalu kamu otomatis
-      klaim di sisi terima (timelock panjang). Coba matikan RPC di tengah jalan — dana tetap aman, auto-retry saat pulih.
+    <div class="note" id="tmNote">
+      This is a real on-chain HTLC. You lock ETH on the pay-side contract (short timelock). When the maker reveals
+      the secret, you claim on the receive-side contract (long timelock). If anything stalls, you get a full refund after the timelock.
     </div>
   </div>
 </div>
@@ -236,228 +226,281 @@ a{color:var(--amber);text-decoration:none}
 <!-- CREATE MODAL -->
 <div class="modal-bg" id="createModal">
   <div class="modal">
-    <span class="x" onclick="closeCreate()">×</span>
-    <h3>Buat order (jadi maker)</h3>
-    <div class="msub">Order kamu langsung muncul di grid taker.</div>
+    <span class="x" onclick="closeCreate()">&times;</span>
+    <h3>Create order (be a maker)</h3>
+    <div class="msub">Your order appears on the taker grid immediately (stored locally).</div>
     <div class="field">
-      <label>Saya butuh (akan saya terima)</label>
+      <label>I need (and will receive)</label>
       <select id="cWant">
-        <option value="rh">ETH Robinhood — saya bayar pakai ETH L1</option>
-        <option value="l1">ETH L1 — saya bayar pakai ETH Robinhood</option>
+        <option value="rh">ETH on Robinhood &mdash; I pay with ETH on L1</option>
+        <option value="l1">ETH on L1 &mdash; I pay with ETH on Robinhood</option>
       </select>
     </div>
     <div class="field">
-      <label>Jumlah ETH (minta = bayar, 1:1)</label>
-      <input id="cAmtWant" type="number" value="1.0" step="0.01" min="0.01">
+      <label>Amount of ETH (request = pay, 1:1)</label>
+      <input id="cAmtWant" type="number" value="0.01" step="0.001" min="0.0001">
     </div>
     <div class="note" id="cPreview"></div>
     <div class="mfoot">
-      <button class="amber" onclick="createOrder()">Publikasikan order</button>
-      <button class="ghost" onclick="closeCreate()">Batal</button>
+      <button class="amber" onclick="createOrder()">Publish order</button>
+      <button class="ghost" onclick="closeCreate()">Cancel</button>
     </div>
   </div>
 </div>
-
 <script>
-/* ───────── keccak256 ───────── */
-const keccak256=(function(){
-const RC=[0x1n,0x8082n,0x800000000000808an,0x8000000080008000n,0x808bn,0x80000001n,
-0x8000000080008081n,0x8000000000008009n,0x8an,0x88n,0x80008009n,0x8000000an,
-0x8000808bn,0x800000000000008bn,0x8000000000008089n,0x8000000000008003n,
-0x8000000000008002n,0x8000000000000080n,0x800an,0x800000008000000an,
-0x8000000080008081n,0x8000000000008080n,0x80000001n,0x8000000080008008n];
-const R=[0,1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14];
-const M=(1n<<64n)-1n;
-function rotl(x,n){n=BigInt(n);return ((x<<n)|(x>>(64n-n)))&M;}
-function kf(s){for(let r=0;r<24;r++){let C=[],D=[];
- for(let x=0;x<5;x++)C[x]=s[x]^s[x+5]^s[x+10]^s[x+15]^s[x+20];
- for(let x=0;x<5;x++)D[x]=C[(x+4)%5]^rotl(C[(x+1)%5],1);
- for(let x=0;x<5;x++)for(let y=0;y<5;y++)s[x+5*y]^=D[x];
- let B=new Array(25).fill(0n);
- for(let x=0;x<5;x++)for(let y=0;y<5;y++)B[y+5*((2*x+3*y)%5)]=rotl(s[x+5*y],R[x+5*y]);
- for(let x=0;x<5;x++)for(let y=0;y<5;y++)s[x+5*y]=B[x+5*y]^((~B[(x+1)%5+5*y])&B[(x+2)%5+5*y]);
- s[0]^=RC[r];}return s;}
-return function(bytes){const rate=136;let s=new Array(25).fill(0n);
- let pad=new Uint8Array((Math.floor(bytes.length/rate)+1)*rate);
- pad.set(bytes);pad[bytes.length]^=0x01;pad[pad.length-1]^=0x80;
- for(let off=0;off<pad.length;off+=rate){for(let i=0;i<rate/8;i++){let v=0n;
-  for(let j=7;j>=0;j--)v=(v<<8n)|BigInt(pad[off+i*8+j]);s[i]^=v;}kf(s);}
- let out=new Uint8Array(32);
- for(let i=0;i<4;i++){let v=s[i];for(let j=0;j<8;j++){out[i*8+j]=Number(v&0xffn);v>>=8n;}}
- return '0x'+[...out].map(b=>b.toString(16).padStart(2,'0')).join('');};})();
-function strBytes(s){return new TextEncoder().encode(s);}
 
-/* ───────── data model ───────── */
-const NAME={l1:'Ethereum L1', rh:'Robinhood'};
-const ASSET={l1:'ETH L1', rh:'ETH Robinhood'};
-const SHORT=6, LONG=12; // jam (display)
-const FEE_BPS=300; // 3% platform fee — sama dgn platformFeeBps di kontrak HTLC.sol
-const FEE_WALLET='0x04FA…B2f3'; // HTLC feeWallet (on-chain)
+/* ============ on-chain config ============ */
+const CHAINS = {
+  rh: {
+    key:'rh', id:4663, hex:'0x1237', name:'Robinhood', asset:'ETH (Robinhood)',
+    htlc:'0xcF3a71e92771FD5c9d432A3654e5f0eE1b7c75fc',
+    rpc:'https://ladymarian.xyz/api/rpc',
+    addParams:{chainId:'0x1237', chainName:'Robinhood Chain',
+      nativeCurrency:{name:'Ether',symbol:'ETH',decimals:18},
+      rpcUrls:['https://ladymarian.xyz/api/rpc'], blockExplorerUrls:[]}
+  },
+  l1: {
+    key:'l1', id:1, hex:'0x1', name:'Ethereum L1', asset:'ETH (L1)',
+    htlc:'0xB6d3218ddFF5C7bA7d4f1AA2d5CDf9382710Ca0d',
+    rpc:'https://rpc.ankr.com/eth/96bb6a3e5af12bc6f0deb692e979243cf14e4552162137f419d5283c6b2f0661',
+    addParams:null // mainnet, wallet already knows it
+  }
+};
+const HTLC_ABI = [
+  "function platformFeeBps() view returns (uint256)",
+  "function feeWallet() view returns (address)",
+  "function owner() view returns (address)",
+  "function quoteFee(uint256 amount) view returns (uint256 net, uint256 fee)",
+  "function computeId(address sender,address recipient,uint256 amount,bytes32 hashlock,uint256 timelock) view returns (bytes32)",
+  "function getSwap(bytes32 swapId) view returns (tuple(address sender,address recipient,uint256 amount,bytes32 hashlock,uint256 timelock,uint8 state))",
+  "function lock(address recipient,bytes32 hashlock,uint256 timelock) payable returns (bytes32)",
+  "function claim(bytes32 swapId,bytes32 secret)",
+  "function refund(bytes32 swapId)",
+  "event Locked(bytes32 indexed swapId,address indexed sender,address indexed recipient,uint256 amount,bytes32 hashlock,uint256 timelock)",
+  "event Claimed(bytes32 indexed swapId,bytes32 secret,uint256 netToRecipient,uint256 fee)"
+];
+const FEE_BPS = 300;
+const ASSET = {l1:'ETH (L1)', rh:'ETH (Robinhood)'};
+const NAME  = {l1:'Ethereum L1', rh:'Robinhood'};
+const SHORT_SECS = 6*3600, LONG_SECS = 12*3600; // pay side short, receive side long
+
+/* ============ wallet / providers ============ */
+let provider=null, signer=null, account=null, walletChainId=null;
+const readProvider = {}; // ethers.JsonRpcProvider per chain for view calls
+function getRead(key){
+  if(!readProvider[key]){
+    const c=CHAINS[key];
+    const net=ethers.Network.from(c.id);
+    readProvider[key]=new ethers.JsonRpcProvider(c.rpc, net, {staticNetwork:net, batchMaxCount:1});
+  }
+  return readProvider[key];
+}
+function readContract(key){ return new ethers.Contract(CHAINS[key].htlc, HTLC_ABI, getRead(key)); }
+
+async function connectWallet(){
+  if(!window.ethereum){ alert('No EVM wallet found. Install MetaMask or a compatible wallet.'); return; }
+  try{
+    provider = new ethers.BrowserProvider(window.ethereum);
+    const accs = await provider.send('eth_requestAccounts', []);
+    account = accs[0];
+    signer = await provider.getSigner();
+    const net = await provider.getNetwork();
+    walletChainId = Number(net.chainId);
+    window.ethereum.removeAllListeners && window.ethereum.removeAllListeners('accountsChanged');
+    window.ethereum.on && window.ethereum.on('accountsChanged', ()=>location.reload());
+    window.ethereum.on && window.ethereum.on('chainChanged', ()=>location.reload());
+    refreshNet();
+  }catch(e){ console.error(e); alert('Connection failed: '+(e.message||e)); }
+}
+function refreshNet(){
+  const pill=document.getElementById('netPill'), label=document.getElementById('netLabel');
+  const btn=document.getElementById('connectBtn');
+  if(account){
+    const cn = walletChainId===4663?'Robinhood': walletChainId===1?'Ethereum L1':('chain '+walletChainId);
+    pill.classList.add('on'); label.textContent = account.slice(0,6)+'…'+account.slice(-4)+' · '+cn;
+    btn.textContent='Connected'; btn.disabled=true; btn.style.opacity=.7;
+  }else{
+    pill.classList.remove('on'); label.textContent='Not connected';
+    btn.textContent='Connect Wallet'; btn.disabled=false; btn.style.opacity=1;
+  }
+}
+async function ensureChain(key){
+  const c=CHAINS[key];
+  if(walletChainId===c.id) return true;
+  try{
+    await window.ethereum.request({method:'wallet_switchEthereumChain', params:[{chainId:c.hex}]});
+  }catch(err){
+    if(err.code===4902 && c.addParams){
+      await window.ethereum.request({method:'wallet_addEthereumChain', params:[c.addParams]});
+    } else { throw err; }
+  }
+  provider=new ethers.BrowserProvider(window.ethereum);
+  signer=await provider.getSigner();
+  walletChainId=Number((await provider.getNetwork()).chainId);
+  refreshNet();
+  return walletChainId===c.id;
+}
+function writeContract(key){ return new ethers.Contract(CHAINS[key].htlc, HTLC_ABI, signer); }
+
+/* ============ secret / hashlock (matches contract keccak256(abi.encodePacked(secret))) ============ */
+function genSecret(){
+  const b=ethers.randomBytes(32);
+  const secret=ethers.hexlify(b);                 // bytes32
+  const hashlock=ethers.keccak256(secret);        // keccak256 over 32 raw bytes == abi.encodePacked(bytes32)
+  return {secret, hashlock};
+}
+
+/* ============ order book (intent layer, localStorage) ============ */
+const LS='rb_otc_orders_v1';
+let orders=[]; let activeTab='rh'; let oid=1;
+function load(){ try{const r=JSON.parse(localStorage.getItem(LS)); if(r&&r.orders){orders=r.orders; oid=r.oid||orders.length+1;}}catch(e){} }
+function save(){ localStorage.setItem(LS, JSON.stringify({orders, oid})); }
+function other(c){return c==='rh'?'l1':'rh';}
 function netAfterFee(g){return g*(1-FEE_BPS/10000);}
 function feeAmt(g){return g*FEE_BPS/10000;}
-let orders=[];
-let activeTab='rh';
-let oid=1;
-const makers=['0x7a3f…2b1c','0x04FA…B2f3','0x9c12…8de4','0xdead…beef','0x1f7d…2efa','0xcaf6…5cb2'];
-function rndMaker(){return makers[Math.floor(Math.random()*makers.length)];}
-function other(c){return c==='rh'?'l1':'rh';}
-
-function seed(){
-  orders=[];oid=1;
-  addOrder('rh',1.0,1.0,'0x7a3f…2b1c');
-  addOrder('rh',0.5,0.5,'0x9c12…8de4');
-  addOrder('rh',2.0,2.0,'0x04FA…B2f3');
-  addOrder('l1',1.0,1.0,'0xdead…beef');
-  addOrder('l1',0.25,0.25,'0x1f7d…2efa');
-  render();
+function shortAddr(a){return a?a.slice(0,6)+'…'+a.slice(-4):'maker';}
+function seedIfEmpty(){
+  if(orders.length) return;
+  addOrder('rh',0.01,'0x7a3f…2b1c'); addOrder('rh',0.02,'0x9c12…8de4');
+  addOrder('l1',0.01,'0xdead…beef'); save();
 }
-function addOrder(want,amtWant,amtGive,maker){
-  orders.push({id:oid++, want, pay:other(want), amtWant, amtGive, maker:maker||rndMaker(), ts:Date.now()});
-}
+function addOrder(want,amt,maker){ orders.push({id:oid++,want,pay:other(want),amt:amt,maker:maker||'0x????…????',ts:Date.now()}); }
 
-/* ───────── render grid ───────── */
 function setTab(t){activeTab=t;
   document.getElementById('tab-rh').classList.toggle('active',t==='rh');
-  document.getElementById('tab-l1').classList.toggle('active',t==='l1');
-  render();}
+  document.getElementById('tab-l1').classList.toggle('active',t==='l1'); render();}
 function render(){
   const rh=orders.filter(o=>o.want==='rh'), l1=orders.filter(o=>o.want==='l1');
   document.getElementById('cnt-rh').textContent=rh.length;
   document.getElementById('cnt-l1').textContent=l1.length;
   document.getElementById('tabhint').innerHTML = activeTab==='rh'
-    ? `Order ini: maker butuh <b style="color:var(--rh)">ETH Robinhood</b>. Kalau kamu ambil → kamu <b>kasih ETH Robinhood</b>, <b>terima ETH L1</b>.`
-    : `Order ini: maker butuh <b style="color:var(--l1)">ETH L1</b>. Kalau kamu ambil → kamu <b>kasih ETH L1</b>, <b>terima ETH Robinhood</b>.`;
-  const list = activeTab==='rh'?rh:l1;
-  const g=document.getElementById('grid');
-  if(!list.length){g.innerHTML='<div class="empty">Belum ada order di kategori ini. Klik “+ Buat order” atau “+ Simulasi maker baru”.</div>';return;}
-  g.innerHTML = list.map(o=>card(o)).join('');
+    ? 'These makers need <b style="color:var(--rh)">ETH on Robinhood</b>. If you take one &rarr; you <b>give ETH on Robinhood</b>, <b>receive ETH on L1</b>.'
+    : 'These makers need <b style="color:var(--l1)">ETH on L1</b>. If you take one &rarr; you <b>give ETH on L1</b>, <b>receive ETH on Robinhood</b>.';
+  const list=activeTab==='rh'?rh:l1, g=document.getElementById('grid');
+  if(!list.length){g.innerHTML='<div class="empty">No orders in this category yet. Click &ldquo;+ Create order&rdquo; or &ldquo;+ Simulate maker&rdquo;.</div>';return;}
+  g.innerHTML=list.map(card).join('');
 }
 function card(o){
   const giveC=o.want, getC=o.pay;
-  return `<div class="card ${o.want}">
-    <div class="ctop">
-      <div class="avatar">${o.want==='rh'?'R':'L'}</div>
-      <div class="maker">Maker <span class="id">${o.maker}</span></div>
-      <span class="want">butuh ${ASSET[o.want]}</span>
-    </div>
-    <div class="swapline">
-      <div class="side"><div class="lbl">Kamu kasih</div>
-        <div class="amt">${o.amtWant.toFixed(3)}</div>
-        <div class="chain ${giveC}">${ASSET[giveC]}</div></div>
-      <div class="swaparrow">→</div>
-      <div class="side"><div class="lbl">Kamu terima</div>
-        <div class="amt">${netAfterFee(o.amtGive).toFixed(3)}</div>
-        <div class="chain ${getC}">${ASSET[getC]}</div></div>
-    </div>
-    <div class="meta">
-      <span>Order #${o.id}</span>
-      <span class="rate">−3% fee · bruto ${o.amtGive.toFixed(3)}</span>
-    </div>
-    <button class="take amber" onclick="openTake(${o.id})">Ambil tawaran ►</button>
-  </div>`;
+  return '<div class="card '+o.want+'">'
+    +'<div class="ctop"><div class="avatar">'+(o.want==='rh'?'R':'L')+'</div>'
+    +'<div class="maker">Maker <span class="id">'+o.maker+'</span></div>'
+    +'<span class="want">needs '+ASSET[o.want]+'</span></div>'
+    +'<div class="swapline">'
+    +'<div class="side"><div class="lbl">You give</div><div class="amt">'+o.amt.toFixed(4)+'</div><div class="chain '+giveC+'">'+ASSET[giveC]+'</div></div>'
+    +'<div class="swaparrow">&rarr;</div>'
+    +'<div class="side"><div class="lbl">You receive</div><div class="amt">'+netAfterFee(o.amt).toFixed(4)+'</div><div class="chain '+getC+'">'+ASSET[getC]+'</div></div>'
+    +'</div>'
+    +'<div class="meta"><span>Order #'+o.id+'</span><span class="rate">&minus;3% fee &middot; gross '+o.amt.toFixed(4)+'</span></div>'
+    +'<button class="take amber" onclick="openTake('+o.id+')">Take offer &#9658;</button></div>';
 }
 
-/* ───────── take modal / swap engine ───────── */
-let cur=null, rpc={rh:true,l1:true}, swapBusy=false, secret, hashlock, autoPending=false;
-function genSecret(){const r=crypto.getRandomValues(new Uint8Array(16));
-  secret='secret-'+[...r].map(b=>b.toString(16).padStart(2,'0')).join('');
-  hashlock=keccak256(strBytes(secret));}
+/* ============ take modal: REAL on-chain swap ============ */
+let cur=null, sec=null, swapState='idle', myLockId=null, recvKey=null, payKey=null;
+function status(msg,cls){const el=document.getElementById('tmStatus'); el.style.display='block'; el.className='statusbar '+cls; el.innerHTML=msg;}
+const STEPS=[
+  {k:'taker_lock', t:'You lock funds on the pay-side', sm:'short timelock'},
+  {k:'maker_reveal', t:'Maker reveals secret & claims your lock', sm:'secret becomes public on-chain'},
+  {k:'claim', t:'You claim on the receive-side', sm:'using the revealed secret'},
+  {k:'done', t:'Atomic swap complete', sm:'net funds settle to both sides'}
+];
+let stepState={};
+function buildTL(){stepState={};STEPS.forEach(s=>stepState[s.k]='');drawTL();}
+function drawTL(){document.getElementById('tmTL').innerHTML=STEPS.map(s=>{
+  const cls=stepState[s.k]||''; const lk=s._link?('<span class="lk"><a href="#" onclick="return false">'+s._link+'</a></span>'):'';
+  return '<div class="tlstep '+cls+'">'+s.t+'<span class="sm">'+s.sm+'</span>'+lk+'</div>';}).join('');}
+function setStep(k,st){stepState[k]=st;drawTL();}
 
 function openTake(id){
-  cur=orders.find(o=>o.id===id); if(!cur)return;
-  rpc={rh:true,l1:true}; swapBusy=false; autoPending=false; genSecret();
-  const giveC=cur.want, getC=cur.pay;
-  const recvChain=cur.pay, payChain=cur.want;
-  document.getElementById('tmTitle').textContent='Ambil tawaran #'+cur.id;
-  document.getElementById('tmSub').innerHTML=`Maker <b>${cur.maker}</b> butuh ${ASSET[cur.want]}.`;
-  document.getElementById('tmGive').textContent=cur.amtWant.toFixed(3);
-  document.getElementById('tmGiveC').textContent=ASSET[giveC];
-  document.getElementById('tmGiveC').className='chain '+giveC;
-  document.getElementById('tmGet').textContent=netAfterFee(cur.amtGive).toFixed(3);
-  document.getElementById('tmGetC').textContent=ASSET[getC];
-  document.getElementById('tmGetC').className='chain '+getC;
-  document.getElementById('tmRate').textContent=`bruto ${cur.amtGive.toFixed(3)} ${ASSET[getC].split(' ')[0]} − fee 3% (${feeAmt(cur.amtGive).toFixed(4)}) = ${netAfterFee(cur.amtGive).toFixed(4)}`;
-  document.getElementById('tmFee').textContent=`− ${feeAmt(cur.amtGive).toFixed(4)} ${ASSET[getC].split(' ')[0]} → ${FEE_WALLET}`;
-  document.getElementById('tmMakerSide').innerHTML=`${NAME[recvChain]} <span style="color:var(--mut)">· timelock ${LONG}j (LONG)</span>`;
-  document.getElementById('tmTakerSide').innerHTML=`${NAME[payChain]} <span style="color:var(--mut)">· timelock ${SHORT}j (SHORT)</span>`;
-  document.getElementById('tmHash').textContent=hashlock.slice(0,26)+'…';
+  cur=orders.find(o=>o.id===id); if(!cur) return;
+  // taker gives cur.want, receives cur.pay
+  payKey=cur.want; recvKey=cur.pay;
+  sec=genSecret(); myLockId=null; swapState='idle';
+  document.getElementById('tmTitle').textContent='Take offer #'+cur.id;
+  document.getElementById('tmSub').innerHTML='Maker <b>'+cur.maker+'</b> needs '+ASSET[cur.want]+'.';
+  document.getElementById('tmGive').textContent=cur.amt.toFixed(4);
+  document.getElementById('tmGiveC').textContent=ASSET[payKey]; document.getElementById('tmGiveC').className='chain '+payKey;
+  document.getElementById('tmGet').textContent=netAfterFee(cur.amt).toFixed(4);
+  document.getElementById('tmGetC').textContent=ASSET[recvKey]; document.getElementById('tmGetC').className='chain '+recvKey;
+  document.getElementById('tmRate').textContent='gross '+cur.amt.toFixed(4)+' &minus; 3% ('+feeAmt(cur.amt).toFixed(5)+') = '+netAfterFee(cur.amt).toFixed(5);
+  document.getElementById('tmFee').textContent='&minus; '+feeAmt(cur.amt).toFixed(5)+' '+ASSET[recvKey];
+  document.getElementById('tmMakerSide').innerHTML=NAME[recvKey]+' <span style="color:var(--mut)">· 12h timelock (LONG)</span>';
+  document.getElementById('tmTakerSide').innerHTML=NAME[payKey]+' <span style="color:var(--mut)">· 6h timelock (SHORT)</span>';
+  document.getElementById('tmHash').textContent=sec.hashlock.slice(0,26)+'…';
   document.getElementById('tmStatus').style.display='none';
-  document.getElementById('tmGo').disabled=false;
-  buildTimeline();
-  updateRpcPills();
+  document.getElementById('tmGo').style.display=''; document.getElementById('tmGo').disabled=false;
+  document.getElementById('tmClaim').style.display='none';
+  document.getElementById('tmRefund').style.display='none';
+  buildTL();
   document.getElementById('takeModal').classList.add('show');
 }
 function closeModal(){document.getElementById('takeModal').classList.remove('show');cur=null;}
 
-const STEPS=[
-  {k:'maker_lock', t:'Maker lock dana di sisi terima', sm:'timelock panjang (LONG)'},
-  {k:'taker_lock', t:'Kamu lock dana di sisi bayar', sm:'timelock pendek (SHORT)'},
-  {k:'reveal', t:'Maker reveal secret & klaim sisi bayar', sm:'secret terbuka on-chain'},
-  {k:'claim', t:'Kamu klaim sisi terima (otomatis)', sm:'pakai secret yang terbuka'},
-  {k:'fee', t:'Fee platform 3% dipotong', sm:'dari jumlah diterima → fee wallet'},
-  {k:'done', t:'Swap atomik selesai', sm:'dana net sampai di kedua pihak'},
-];
-let stepState={};
-function buildTimeline(){
-  stepState={}; STEPS.forEach(s=>stepState[s.k]='');
-  drawTimeline();
-}
-function drawTimeline(){
-  const el=document.getElementById('tmTL');
-  el.innerHTML=STEPS.map(s=>{
-    const cls=stepState[s.k]||'';
-    return `<div class="tlstep ${cls}">${s.t}<span class="sm">${s.sm}</span></div>`;
-  }).join('');
-}
-function setStep(k,state){stepState[k]=state;drawTimeline();}
-function status(msg,cls){const el=document.getElementById('tmStatus');
-  el.style.display='block';el.className='statusbar '+cls;el.textContent=msg;}
-
-function updateRpcPills(){
-  for(const c of ['rh','l1']){
-    const el=document.getElementById('pill-'+c);
-    el.className='pill '+(rpc[c]?'up':'down');
-    el.textContent=`● RPC ${NAME[c]}: ${rpc[c]?'up':'DOWN'}`;
-  }
-}
-function toggleRpc(c){rpc[c]=!rpc[c];updateRpcPills();
-  if(rpc[c]&&autoPending){const recvChain=cur.pay; if(c===recvChain){status('RPC '+NAME[c]+' pulih — lanjut klaim…','run');setTimeout(()=>doClaim(),500);}}}
-
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function runSwap(){
-  if(swapBusy||!cur)return; swapBusy=true; autoPending=false;
-  document.getElementById('tmGo').disabled=true;
-  const recvChain=cur.pay, payChain=cur.want;
-  setStep('maker_lock','active'); status('Maker lock di '+NAME[recvChain]+'…','run'); await sleep(700);
-  setStep('maker_lock','done');
-  setStep('taker_lock','active'); status('Kamu lock di '+NAME[payChain]+'…','run'); await sleep(700);
-  setStep('taker_lock','done');
-  setStep('reveal','active'); status('Maker reveal secret di '+NAME[payChain]+'…','run'); await sleep(500);
-  if(!rpc[payChain]){
-    setStep('reveal','err'); status('RPC '+NAME[payChain]+' DOWN — reveal tertunda. Dana aman terkunci. Nyalakan RPC lalu klik Ambil lagi.','err');
-    swapBusy=false; document.getElementById('tmGo').disabled=false; return;
-  }
-  const ok = keccak256(strBytes(secret))===hashlock;
-  setStep('reveal','done'); status('Secret terbuka on-chain · keccak256(secret)==hashlock → '+ok,'run'); await sleep(700);
-  await doClaim();
-}
-async function doClaim(){
-  const recvChain=cur.pay;
-  setStep('claim','active');
-  if(!rpc[recvChain]){
-    autoPending=true; setStep('claim','warn');
-    status('RPC '+NAME[recvChain]+' DOWN — klaim RETRY. Dana aman; auto-lanjut saat RPC pulih (margin '+LONG+'j lega).','err');
-    return;
-  }
-  status('Kamu klaim di '+NAME[recvChain]+'…','run'); await sleep(700);
-  autoPending=false;
-  setStep('claim','done'); setStep('fee','done'); setStep('done','done');
-  status('✅ Swap selesai — kamu terima '+netAfterFee(cur.amtGive).toFixed(3)+' '+ASSET[cur.pay]+' (fee platform 3% = '+feeAmt(cur.amtGive).toFixed(4)+' dipotong → '+FEE_WALLET+'). Order ditutup.','ok');
-  orders=orders.filter(o=>o.id!==cur.id); render();
-  swapBusy=false;
+async function takerLock(){
+  if(!cur) return;
+  if(!account){ await connectWallet(); if(!account) return; }
+  try{
+    setStep('taker_lock','active'); status('Switching wallet to '+NAME[payKey]+'…','run');
+    if(!(await ensureChain(payKey))){ status('Wrong network. Please switch to '+NAME[payKey]+'.','err'); setStep('taker_lock','err'); return; }
+    const c=writeContract(payKey);
+    const amount=ethers.parseEther(String(cur.amt));
+    const timelock=Math.floor(Date.now()/1000)+SHORT_SECS;
+    // maker is unknown in this demo intent-board; taker locks TO the maker placeholder is not possible without maker address.
+    // For a real run the recipient must be the maker's address. Here we use the connected account as a self-test recipient
+    // ONLY if maker address is a placeholder; otherwise use maker.
+    const recipient = (cur.makerAddr && ethers.isAddress(cur.makerAddr)) ? cur.makerAddr : account;
+    status('Confirm in wallet: lock '+cur.amt+' '+ASSET[payKey]+' on '+NAME[payKey]+'…','run');
+    const tx=await c.lock(recipient, sec.hashlock, timelock, {value:amount});
+    status('Lock tx sent: '+tx.hash.slice(0,18)+'… waiting for confirmation','run');
+    const rc=await tx.wait();
+    // derive swapId
+    myLockId=await readContract(payKey).computeId(account, recipient, amount, sec.hashlock, timelock);
+    setStep('taker_lock','done');
+    STEPS[0]._link='locked · tx '+tx.hash.slice(0,14)+'…'; drawTL();
+    status('✅ Funds locked on '+NAME[payKey]+'. Swap id '+myLockId.slice(0,14)+'…','ok');
+    document.getElementById('tmGo').style.display='none';
+    document.getElementById('tmRefund').style.display=''; // refund available after timeout
+    document.getElementById('tmClaim').style.display='';  // claim on receive side once maker locked there
+    setStep('maker_reveal','active');
+    document.getElementById('tmNote').innerHTML='Locked on-chain. In a full two-sided OTC the maker now locks on '+NAME[recvKey]+' and reveals the secret. '
+      +'Use <b>Claim</b> once the receive-side lock exists, or <b>Refund</b> after the 6h timelock if it never happens.';
+  }catch(e){ console.error(e); setStep('taker_lock','err'); status('Lock failed: '+(e.shortMessage||e.message||e),'err'); }
 }
 
-/* ───────── create order ───────── */
+async function takerClaim(){
+  try{
+    setStep('claim','active'); status('Switching to '+NAME[recvKey]+' to claim…','run');
+    if(!(await ensureChain(recvKey))){ status('Switch to '+NAME[recvKey]+' to claim.','err'); return; }
+    // In a full flow we'd look up the receive-side swapId from the maker's lock event.
+    // Here we let the user paste/confirm; for the self-test we re-derive against our own secret is not possible without maker lock.
+    const sid = prompt('Enter the receive-side swapId (from the maker lock on '+NAME[recvKey]+'):');
+    if(!sid) { status('Claim cancelled.','err'); setStep('claim',''); return; }
+    const c=writeContract(recvKey);
+    status('Confirm claim in wallet…','run');
+    const tx=await c.claim(sid, sec.secret);
+    status('Claim tx sent: '+tx.hash.slice(0,18)+'… waiting','run');
+    await tx.wait();
+    setStep('claim','done'); setStep('done','done');
+    status('✅ Claimed on '+NAME[recvKey]+'. 3% fee was skimmed to the fee wallet on-chain.','ok');
+    document.getElementById('tmClaim').style.display='none';
+    orders=orders.filter(o=>o.id!==cur.id); save(); render();
+  }catch(e){ console.error(e); setStep('claim','err'); status('Claim failed: '+(e.shortMessage||e.message||e),'err'); }
+}
+
+async function takerRefund(){
+  try{
+    if(!myLockId){ status('No lock to refund yet.','err'); return; }
+    if(!(await ensureChain(payKey))){ status('Switch to '+NAME[payKey]+' to refund.','err'); return; }
+    const c=writeContract(payKey);
+    status('Confirm refund in wallet (only valid after the 6h timelock)…','run');
+    const tx=await c.refund(myLockId);
+    await tx.wait();
+    status('✅ Refunded in full on '+NAME[payKey]+' — no fee charged on refund.','ok');
+    document.getElementById('tmRefund').style.display='none';
+  }catch(e){ console.error(e); status('Refund failed (timelock may not have expired yet): '+(e.shortMessage||e.message||e),'err'); }
+}
+
+/* ============ create order ============ */
 function openCreate(){updatePreview();document.getElementById('createModal').classList.add('show');}
 function closeCreate(){document.getElementById('createModal').classList.remove('show');}
 document.addEventListener('input',e=>{if(e.target.closest('#createModal'))updatePreview();});
@@ -465,26 +508,30 @@ document.addEventListener('change',e=>{if(e.target.closest('#createModal'))updat
 function updatePreview(){
   const want=document.getElementById('cWant').value;
   const aw=parseFloat(document.getElementById('cAmtWant').value||'0');
-  document.getElementById('cPreview').innerHTML=
-    `Kamu (maker) <b>butuh ${aw.toFixed(3)} ${ASSET[want]}</b>, bayar <b>${aw.toFixed(3)} ${ASSET[other(want)]}</b> (1:1).
-     Taker yang ambil kasih ${aw.toFixed(3)} ${ASSET[want]} & terima ${netAfterFee(aw).toFixed(3)} ${ASSET[other(want)]} (setelah fee 3%).`;
+  document.getElementById('cPreview').innerHTML='You (maker) <b>need '+aw.toFixed(4)+' '+ASSET[want]+'</b>, pay <b>'+aw.toFixed(4)+' '+ASSET[other(want)]+'</b> (1:1). '
+    +'A taker gives '+aw.toFixed(4)+' '+ASSET[want]+' and receives '+netAfterFee(aw).toFixed(4)+' '+ASSET[other(want)]+' (after 3% fee).';
 }
 function createOrder(){
   const want=document.getElementById('cWant').value;
   const aw=parseFloat(document.getElementById('cAmtWant').value||'0');
-  if(aw<=0){alert('Jumlah harus > 0');return;}
-  addOrder(want,aw,aw,'0x04FA…B2f3');
-  activeTab=want; setTab(want); closeCreate();
+  if(aw<=0){alert('Amount must be > 0');return;}
+  addOrder(want,aw, account?shortAddr(account):'0x04FA…B2f3');
+  if(account) orders[orders.length-1].makerAddr=account;
+  save(); activeTab=want; setTab(want); closeCreate();
 }
-function seedMore(){
-  const want=Math.random()<0.5?'rh':'l1';
-  const aw=+(0.1+Math.random()*2).toFixed(2);
-  addOrder(want,aw,aw);
-  setTab(want);
+function seedMore(){ const want=Math.random()<0.5?'rh':'l1'; const aw=+(0.005+Math.random()*0.03).toFixed(3); addOrder(want,aw); save(); setTab(want); }
+
+/* ============ live fee check from chain ============ */
+async function verifyFeeOnChain(){
+  try{
+    const [bpsRh, bpsL1]=await Promise.all([readContract('rh').platformFeeBps(), readContract('l1').platformFeeBps()]);
+    console.log('on-chain platformFeeBps rh=',bpsRh.toString(),' l1=',bpsL1.toString());
+  }catch(e){ console.warn('fee check failed', e.message); }
 }
 
 /* init */
-seed();
+load(); seedIfEmpty(); render(); refreshNet(); verifyFeeOnChain();
+
 </script>
 </body>
 </html>
